@@ -1,0 +1,130 @@
+Conflict_Warnings
+===============
+
+Description
+============
+
+Provides tools to warn end users about actions which may cause undesired
+results. This plugin was primarily written to deal with race conditions, caused
+by multiple users editing the same records.
+
+I wrote this in tandem with my acts_as_touchable plugin to allow simple conflict
+detection in parent-child relationships. 
+
+By including a timestamp parameter in links that may contain time sensitive
+information the plugin can determine if a warning should be issued.
+
+
+Requirements
+==============
+
+For default behaviour an updated_at or updated_on timestamp column is needed on
+any model Conflict_Warnings has to guess at.
+
+
+Installation
+=============
+
+From the root of your rails project run the following command:
+./script/plugin install git://github.com/EmFi/conflict_warnings.git
+
+
+Usage
+=====
+
+link_to_with_timestamp
+----------------------
+
+Wrapper for link_to that adds a page_rendered_at=DateTime.now paramater to the
+target url.
+
+
+link_to_remote_with_timestamp
+-----------------------------
+
+Wrapper for link_to remote that adds a page_rendered_at=DateTime.now parameter
+to the target url.
+
+
+link_to_remote_with_timestamp_and_fallback
+------------------------------------------
+
+Wrapper for link_to_remote_with_timestamp that sets the html_options argument
+to link_to_with_timestamp. Allowing for AJAX conflict warnings that successfully
+fall back go html requests.
+
+
+catch_warnings options = {}, &block
+------------------------------------
+
+catch_warnings adds a before_filter call to a controller class.
+
+Without any arguments catch_warnings will guess at the information it needs to 
+to determine if there is a conflict. In the event of a conflict catch_warnings
+will redirect_to :back, setting flash[:warning] to "Your request will not be
+processed because the data you were viewing is out of date. The page has been
+refreshed. Please try again." For JS requests the message is displayed in an
+alert box.
+
+Accepted options:
+:model - ActiveRecord model name that catch_warning will use to determine if
+    there is a conflict. Default value is the taken from the controller name.
+    Cannot be used with either :siumlate_conlfict argument.
+    
+:id - Record id used to determine if there is a conflict. Default value is
+    params[options[:params_id_key]]. Cannot be used with either
+    :siumlate_conlfict argument.
+    
+:params_id_key - params hash key containing the id to be used in conjunction
+   with options[:model] an options[:column_name] to determine conflicts.
+
+:column_name - column in model that catch_warnings uses to determine conflicts.
+    Default will choose one of updated_at or updated_on. If the timestamp in the
+    params hash is less than the value for this attribute in the instance found
+    using model and id, then catch_warnings has found a conflict.
+    
+:time_stamp_key - params hash key containing the time the requesting page was
+    rendered. Default value is :page_rendered_at
+    
+:template - template file to render in event of a conflict. Default is
+    "#{controller_name}/#{action_name}_conflict" so a conflict triggered on a
+    trades/confirm action will search for a confirm_conflict html.erb, .rhtml,
+    or .rjs file depending on the request. If one isn't found the default action
+    is taken.
+
+
+:simulate_conflict_on_requests_before - user selected timestamp to treat all
+    requests from pages rendered before this value as a conflict. Default value
+    is nil. Useful for enforcing users follow recent application updates.
+
+:simulate_conflict_on_requests_before - user selected timestamp to treat all
+    requests from pages rendered after this value as a conflict. Default value
+    is nil. Useful for disabling portions of your application at a specified
+    time.
+
+:message - message to add to flash hash, default is "Your request will not be
+    processed becasue the data you were viewing is out of date. The page has
+    been refreshed. Please try again."
+    
+:flash_key - which key of the flash hash to save the message in. Default value
+    is :warning
+
+:except, :only - arguments to be passed to the underlying before_filter call
+
+&block - If for some reason you want to write your own respond_to do |format|
+    block the option is availble to you.
+
+Example
+=======
+
+
+
+
+Things To Do:
+===========
+*Provide simple useful example
+*Handle additional formats beyond html and js
+*Write test suite
+
+
+Copyright (c) 2009 Emery Finkelstein, released under the MIT license

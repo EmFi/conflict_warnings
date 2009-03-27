@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="1a77327a-f266-487e-97ae-d4d2a20f06de" kpf_version="4" name="conflict_warnings.kpf">
+<preference-set idref="1a77327a-f266-487e-97ae-d4d2a20f06de">
+  <boolean id="import_live">1</boolean>
+</preference-set>
+</project>
