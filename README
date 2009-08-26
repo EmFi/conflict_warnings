@@ -4,15 +4,29 @@ Conflict_Warnings
 Description
 ============
 
+Named after the HTTP 409 Conflict Status Conflict_Warnings is used to notify
+users that their requests cannot be performed because they are acting on old
+data in the database.
+
 Provides tools to warn end users about actions which may cause undesired
 results. This plugin was primarily written to deal with race conditions, caused
 by multiple users editing the same records.
 
 I wrote this in tandem with my acts_as_touchable plugin to allow simple conflict
-detection in parent-child relationships. 
+detection in parent-child relationships.  However my acts_as_touchable plugin
+has been obsoleted by Rails 2.3.3's touch. Which will do in a pinch.
 
-By including a timestamp parameter in links that may contain time sensitive
-information the plugin can determine if a warning should be issued.
+Using Conflict_Warnings is a two step process.
+
+Step one: Embed a timestamp paramaters in potentially dangerous links.
+This is done with the link_to_with_timestamp helper from your views.
+
+Step two: Catch undesireable timestamps
+The catch_warnings filter identifies these problem cases allowing you to display
+relevant errors and warnings and/or more importantly update information.
+
+See the catch_conflicts section for more details.
+
 
 
 Requirements
@@ -59,12 +73,18 @@ catch_warnings options = {}, &block
 
 catch_warnings adds a before_filter call to a controller class.
 
-Without any arguments catch_warnings will guess at the information it needs to 
-to determine if there is a conflict. In the event of a conflict catch_warnings
-will redirect_to :back, setting flash[:warning] to "Your request will not be
+Without any arguments, catch_warnings will guess at the information it needs to
+to determine if there is a conflict. In the event of a conflict, catch_warnings
+will render the template at the views/<controller name>/<action>_conflict for the
+requested format. If a template is not found it will fall back to the default
+behaviour of redirect_to :back, setting flash[:warning] to "Your request will not be
 processed because the data you were viewing is out of date. The page has been
 refreshed. Please try again." For JS requests the message is displayed in an
 alert box.
+
+In the event of a conflict, catch_warning will block the action from happening
+as defined in the controller
+
 
 Accepted options:
 :model - ActiveRecord model name that catch_warning will use to determine if
@@ -92,12 +112,13 @@ Accepted options:
     or .rjs file depending on the request. If one isn't found the default action
     is taken.
 
-
-:simulate_conflict_on_requests_before - user selected timestamp to treat all
+:simulate_conflict_on_requests_before - instead of dynamically determining 
+    a point in time to determine conflicts allows you to choose one. Treats all
     requests from pages rendered before this value as a conflict. Default value
     is nil. Useful for enforcing users follow recent application updates.
 
-:simulate_conflict_on_requests_before - user selected timestamp to treat all
+:simulate_conflict_on_requests_after - instead of dynamically determining
+    a point in time to determine conflicts allows you to choose one. Treat all
     requests from pages rendered after this value as a conflict. Default value
     is nil. Useful for disabling portions of your application at a specified
     time.
@@ -117,12 +138,48 @@ Accepted options:
 Example
 =======
 
+If show is rendered for a record by a user, and another user update's that same
+record before the first user clicks the confirm link, catch_conflict will block
+the confirm action form happening and seemlessly notify and update the first
+user.
+
+
+--views/sample/show.html.erb--
+<div id="warnings">
+</div>
+<div id="static_content">
+..
+..
+..
+</div>
+<div id="dynamic_content">
+<=%render :partial => dynamic_content
+</div>
+..
+..
+link_to_remote_with_timestamp "Confirm", confirm_sample_path(@sample)
+
+--controllers/sample_controller_rb--
+class SampleController < ApplicationController
+    catch_conflicts :only => confirm
+
+    def confirm
+        #not executed in a conflict
+        ...
+    end
+    ...
+end
+
+--views/sample/confirm_conflict.rjs--
+#updates relevant portions of page and highlights changes.
+page.replace_html :warning, "We cannot complete your request at this time."
+page.replace html :dynamic_content, render :partial => 'sample/dynamic_content'
+page.visual_effect :highlight :dynamic_content, :duration => 5
 
 
 
 Things To Do:
 ===========
-*Provide simple useful example
 *Handle additional formats beyond html and js
 *Write test suite
 
