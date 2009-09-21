@@ -252,8 +252,8 @@ class EventTicketController < ApplicationController
     catch_resources_conflicts :only => :new, :accessor => :tickets_left,
         :model => :event, :params_id_key => :event_id
 
-    def buy
-        #not executed if event
+    def new
+        #not executed if event.find(params[:event_id]).tickets_left is false or non positive.
         ...
     end
     ...
