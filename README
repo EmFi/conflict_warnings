@@ -5,35 +5,41 @@ Description
 ============
 
 Named after the HTTP 409 Conflict Status Conflict_Warnings is used to notify
-users that their requests cannot be performed because they are acting on old
-data in the database.
+users that their requests will not be performed because they could result in
+inconsistant data in the database.
 
-Provides tools to warn end users about actions which may cause undesired
-results. This plugin was primarily written to deal with race conditions, caused
-by multiple users editing the same records.
+Conflict Warnings introduces two approaches to identify dangerous situations.
+The catch_conflicts and catch_resource_conflicts filters identify problem cases
+allowing you to display relevant errors and warnings and/or more importantly
+update information.
 
-I wrote this in tandem with my acts_as_touchable plugin to allow simple conflict
-detection in parent-child relationships.  However my acts_as_touchable plugin
-has been obsoleted by Rails 2.3.3's touch. Which will do in a pinch.
+catch_conflicts is used to discriminate by timestamp, while
+catch_resource_conflicts checks for a positive value returned by an accessor.
 
-Using Conflict_Warnings is a two step process.
+Using timestamps to catch conflicts is a two step process.
 
 Step one: Embed a timestamp paramaters in potentially dangerous links.
 This is done with the link_to_with_timestamp helper from your views.
 
-Step two: Catch undesireable timestamps
-The catch_warnings filter identifies these problem cases allowing you to display
-relevant errors and warnings and/or more importantly update information.
+Step two: Catch undesireable timestamps using conflict_warnings.
+The options given are used to find a timestamp to compare against the timestamp of
+the referring page. The most common uses of catch_conflicts compare the time at
+which the referrant was rendered against the updated_at field on the record to
+be changed.
 
-See the catch_conflicts section for more details.
+Using catch_resource_conflicts is a simpler way of identifying problem cases.
+
+In either case, Conflict Warnings will make reasonable guesses when options are
+omitted.
+
+See the catch_conflicts section for more details on options and uses.
 
 
 
 Requirements
 ==============
 
-For default behaviour an updated_at or updated_on timestamp column is needed on
-any model Conflict_Warnings has to guess at.
+None.
 
 
 Installation
@@ -68,26 +74,28 @@ to link_to_with_timestamp. Allowing for AJAX conflict warnings that successfully
 fall back go html requests.
 
 
-catch_warnings options = {}, &block
-------------------------------------
+Filters
+-------
 
-catch_warnings adds a before_filter call to a controller class.
+catch_conflicts and catch_resource_conflict each adds a before_filter call
+to a controller class.
 
-Without any arguments, catch_warnings will guess at the information it needs to
+Without any arguments, both filters will guess at the information it needs to
 to determine if there is a conflict. In the event of a conflict, catch_warnings
 will render the template at the views/<controller name>/<action>_conflict for the
 requested format. If a template is not found it will fall back to the default
-behaviour of redirect_to :back, setting flash[:warning] to "Your request will not be
-processed because the data you were viewing is out of date. The page has been
-refreshed. Please try again." For JS requests the message is displayed in an
-alert box.
+behaviour of redirect_to :back, and setting flash[:warning] to a suitable warning
+For JS requests the message is displayed in an alert box.
 
-In the event of a conflict, catch_warning will block the action from happening
-as defined in the controller
+In the event of a conflict, the requested action is blocked and the filter
+either executes the provided block, renders the associated template, or takes
+the default action.
 
 
-Accepted options:
-:model - ActiveRecord model name that catch_warning will use to determine if
+Accepted options common to both filters:
+-----------------------------------------
+
+:model - ActiveRecord model name that is use to determine if
     there is a conflict. Default value is the taken from the controller name.
     Cannot be used with either :siumlate_conlfict argument.
     
@@ -95,48 +103,73 @@ Accepted options:
     params[options[:params_id_key]]. Cannot be used with either
     :siumlate_conlfict argument.
     
-:params_id_key - params hash key containing the id to be used in conjunction
-   with options[:model] an options[:column_name] to determine conflicts.
+:params_id_key - params hash key linking to the id to be used in conjunction
+   with options[:model] an options[:accessor] to determine conflicts.
 
-:column_name - column in model that catch_warnings uses to determine conflicts.
-    Default will choose one of updated_at or updated_on. If the timestamp in the
-    params hash is less than the value for this attribute in the instance found
-    using model and id, then catch_warnings has found a conflict.
-    
-:time_stamp_key - params hash key containing the time the requesting page was
-    rendered. Default value is :page_rendered_at
-    
-:template - template file to render in event of a conflict. Default is
-    "#{controller_name}/#{action_name}_conflict" so a conflict triggered on a
-    trades/confirm action will search for a confirm_conflict html.erb, .rhtml,
+:accessor - method in model that returns the value to be used in identifying conflicts.
+    In catch_conflicts the default is updated_at or updated_on, if such a column
+    exists.
+    In catch_resource_conflicts the default is the first column with a name matching /available/.
+
+:template - template file to render in event of a conflict. For catch_conflicts,
+    the default value is "#{controller_name}/#{action_name}_conflict". For
+    catch_resource_conflicts, the default value is
+    "#{controller_name}/#{action_name}_resource_unavailable".
+    When a conflict is identified on search for a html.erb, .rhtml,
     or .rjs file depending on the request. If one isn't found the default action
     is taken.
 
-:simulate_conflict_on_requests_before - instead of dynamically determining 
-    a point in time to determine conflicts allows you to choose one. Treats all
-    requests from pages rendered before this value as a conflict. Default value
-    is nil. Useful for enforcing users follow recent application updates.
+:message - message to add to flash hash. The catch_conflicts default value
+    is "Your request will not be processed becasue the data you were viewing is
+    out of date. The page has been refreshed. Please try again."
+    The catch_resource_conflicts default value is "Your request will not be
+    processed because the resource you require is no longer available."
 
-:simulate_conflict_on_requests_after - instead of dynamically determining
-    a point in time to determine conflicts allows you to choose one. Treat all
-    requests from pages rendered after this value as a conflict. Default value
-    is nil. Useful for disabling portions of your application at a specified
-    time.
-
-:message - message to add to flash hash, default is "Your request will not be
-    processed becasue the data you were viewing is out of date. The page has
-    been refreshed. Please try again."
-    
 :flash_key - which key of the flash hash to save the message in. Default value
     is :warning
 
 :except, :only - arguments to be passed to the underlying before_filter call
 
-&block - If for some reason you want to write your own respond_to do |format|
+&block - If you want to write your own respond_to do |format|
     block the option is availble to you.
 
-Example
-=======
+
+
+catch_conflicts options = {}, &block
+-------------------------------------
+
+catch_conflicts is a filter that compares a timestamp embedded in the requested
+url against a deadline to identify conflicts. Without any arguments, the model,
+id, and accessor are used to select the deadline. Unless options dictate otherwise,
+the model, is taken from the controller name, id is from the params[:id] field,
+and accessor is the updated_at accessor on the instance of the model with the given id.
+See the other options for other ways of specifying the deadline.
+
+A conflict is defined by a request after the deadline containing a timestamp 
+before the deadline.
+
+Accepted Options:
+
+:time_stamp_key - params hash key containing the timestamp the requesting page was
+    rendered. Default value is :page_rendered_at
+
+
+:simulate_conflict_on_requests_before - instead of dynamically determining
+    a deadline to identify conflicts allows you to choose one. Treats all
+    requests from pages rendered before this value as a conflict. Default value
+    is nil. Useful for enforcing users to take actions following recent
+    application updates.
+
+:simulate_conflict_on_requests_after - instead of dynamically determining
+    a deadline to identify conflicts allows you to choose one. Treat all
+    requests from pages rendered after this value as a conflict. Default value
+    is nil. Useful for disabling portions of your application at a specified
+    time.
+
+
+
+catch_conflicts Example
+-----------------
 
 If show is rendered for a record by a user, and another user update's that same
 record before the first user clicks the confirm link, catch_conflict will block
@@ -153,7 +186,7 @@ user.
 ..
 </div>
 <div id="dynamic_content">
-<=%render :partial => dynamic_content
+<=%render :partial => dynamic_content%>
 </div>
 ..
 ..
@@ -175,6 +208,64 @@ end
 page.replace_html :warning, "We cannot complete your request at this time."
 page.replace html :dynamic_content, render :partial => 'sample/dynamic_content'
 page.visual_effect :highlight :dynamic_content, :duration => 5
+
+
+catch_resource_conflicts options = {}, &block
+----------------------------------------------
+catch_resource_conflicts is a filter that blocks requests when a resource is
+unavailable. Without any arguments, the model, id, and accessor are used to
+select the resource. Unless options dictate otherwise, the model, is taken from
+the controller name, id is from the params[:id] field, and accessor is the first
+field containing the name "available" on the instance of the model with the
+given id.
+
+
+See the other options for other ways of specifying the deadline.
+
+A conflict is defined by the accessor returning false, or an numeric value of 0
+or less.
+
+Accepted Options:
+
+:class_method - Default is nil. If true, accessor is treated as a class method
+instead of an instance method. So catch_resource_conflicts will use
+model.accessor instead of model.find(id).accessor to identify conflicts.
+
+catch_resource_conflit Example
+------------------------------
+
+--views/events/show.html.erb--
+<div id="warnings">
+</div>
+<div id="static_content">
+..
+..
+..
+</div>
+<div id="tickets_left">
+There are <%=@event.tickets_left%> tickets available.
+</div>
+..
+..
+link_to_remote "Buy Now", new_event_ticket_path(@event)
+
+--controllers/events_controller_rb--
+class EventTicketController < ApplicationController
+    catch_resources_conflicts :only => :new, :accessor => :tickets_left,
+        :model => :event, :params_id_key => :event_id
+
+    def buy
+        #not executed if event
+        ...
+    end
+    ...
+end
+
+--views/sample/new_resource_unavailable.rjs--
+#updates relevant portions of page and highlights changes.
+page.replace_html :warning, "The show you requested has sold out."
+page.replace html :tickets_left, render "No tickets available."
+page.visual_effect :highlight :tickets_left, :duration => 5
 
 
 

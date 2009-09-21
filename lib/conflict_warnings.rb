@@ -66,9 +66,16 @@ module ConflictWarnings #:nodoc:
       module ClassMethods
 
         mattr_accessor :valid_keys_for_conflict_warnings
+        @@common_valid_keys = [
+        
+          :message, :flash_key, :except, :only, :model, :id,
+          :accessor, :params_id_key, :template ]
+
         @@valid_keys_for_conflict_warnings = [
-        :simulate_conflict_on_requests_before, :message, :flash_key,:except, :only, :model, :id,
-        :time_stamp_key, :column_name, :params_id_key, :template ]
+          :simulate_conflict_on_requests_before, :simulate_conflict_on_requests_after,
+          :time_stamp_key ] + @@common_valid_keys
+
+        @@valid_keys_for_resource_warnings = [:class_method] + @@common_valid_keys
 
 
         def catch_conflicts(options = {},&block)
@@ -77,8 +84,17 @@ module ConflictWarnings #:nodoc:
           except = options[:except] ? options.delete(:except) : nil
           only = options[:only] ? options.delete(:only) : nil
           before_filter :except => except, :only => only do |controller|
-
             controller.redirect_if_content_changed(options,&block)
+          end
+        end
+
+        def catch_resource_conflicts(options = {},&block)
+          options.assert_valid_keys(valid_keys_for_resource_warnings)
+
+          except = options[:except] ? options.delete(:except) : nil
+          only = options[:only] ? options.delete(:only) : nil
+          before_filter :except => except, :only => only do |controller|
+            controller.redirect_if_resource_unavailable(options,&block)
           end
         end
 
@@ -86,40 +102,52 @@ module ConflictWarnings #:nodoc:
 
       module InstanceMethods
         def redirect_if_content_changed(options = {},&block)
-          if options[:simulate_conflict_on_requests_before].nil? && params[options[:params_id_key]].nil? && params[:id].nil? && options[:id].nil?
-            raise ArgumentError, "filter_fresh_request: You must provide a method of generating a time used to decide which requests are fresh. Please see filter_stale_content documentation."
-          elsif options[:simulate_conflict_on_requests_before] && options[:params_id_key]
-            raise ArgumentError, "filter_fresh_request: Only needs one of :redirect_before or :param options is required, both were supplied."
+          if options[:simulate_conflict_on_requests_before].nil? && 
+              options[:simulate_conflict_on_requests_after.nil?] &&
+              params[options[:params_id_key]].nil? && params[:id].nil? && options[:id].nil?
+            raise ArgumentError, "catch_conflicts: You must provide a method of " +
+              "generating a time used to decide which requests are fresh. Please " +
+              "see filter_stale_content documentation."
+          elsif options[:simulate_conflict_on_requests_before] &&
+              options[:simulate_conflict_on_requests_after] &&
+              options[:params_id_key]
+            raise ArgumentError, "catch_conflicts: Only needs one of "+
+              ":redirect_before or :param options is required, both were supplied."
+          elsif options[:time_stamp_key] && params[options[:time_stamp_key]].nil? &&
+              params[:page_rendered_at].nil?
+            return
           end
           @redirect_requests_before =
-          if options[:simulate_conflict_on_requests_before]
+            if options[:simulate_conflict_on_requests_before]
             options[:simulate_conflict_on_requests_before]
           else
             model = options[:model] || self.controller_name.singularize
             model = model.to_s.camelcase
             model = Kernel.const_get(model)
             model.column_names.grep(/(updated_(at|on))/)
-            column_name = options[:column_name] || $1
+            accessor = options[:accessor] || $1
 
             id = options[:id] || params[options[:params_id_key]] || params[:id]
             @instance = model.find(id)
-            @instance.send(column_name)
+            @instance.send(accessor)
           end
           @redirect_requests_after = options[:simulate_conflict_on_requests_after]
-          time_stamp_key = options[:time_stamp_key]|| :page_rendered_at
+          time_stamp_key = options[:time_stamp_key] || :page_rendered_at
           time_stamp = params[time_stamp_key]
           flash_key = options[:flash_key] || :warning
-          message = options [:message] || "Your request will not be processed because the data you were viewing is out of date. The page has been refreshed. Please try again."
+          message = options [:message] || "Your request will not be processed " +
+            "because the data you were viewing is out of date. The page has " +
+            "been refreshed. Please try again."
           @rendered_at = Time.at(time_stamp.to_i) if time_stamp
 
           if @rendered_at && (@redirect_requests_before && @rendered_at < @redirect_requests_before ||
-                              @redirect_requests_after && @rendered_at > @redirect_requests_after)
+                @redirect_requests_after && @rendered_at > @redirect_requests_after)
             flash[flash_key] = message unless message.blank?
             if block_given?
               instance_eval(&block)
             else
               template_to_use = options[:template] || File.join(controller_name, action_name)
-              template_to_use.sub!(/(_conflict)?$/, "_conflict")
+              template_to_use.sub!(/_conflict)?$/, "_conflict")
               respond_to do |format|
                 format.html {
                   if template_exists?(template_to_use)
@@ -127,17 +155,17 @@ module ConflictWarnings #:nodoc:
                   else
                     redirect_to :back#, :status => 409
                   end
-                  }
+                }
 
                 format.js {
                   if template_exists?(template_to_use)
                     render :file => template_to_use,  :status => 409
                   else
-                   render(:update, :status => 409) do |page|
+                    render(:update, :status => 409) do |page|
 
-                    page.redirect_to :back
-                    alert(message)
-                   end
+                      page.redirect_to :back
+                      alert(message)
+                    end
 
                   end
                   flash.discard
@@ -148,15 +176,78 @@ module ConflictWarnings #:nodoc:
 
         end
 
+        def redirect_if_resource_unavailable(options = {},&block)
+          if params[options[:params_id_key]].nil? && params[:id].nil? && 
+              options[:id].nil? && options[:class_method].nil?
+            raise ArgumentError, "catch_resource_conflicts: You must supply a " +
+              "method of determining which resource to work with. "+
+              "Please see conflict_warnings documentation."
+          end
+
+          model = options[:model] || self.controller_name.singularize
+          model = model.to_s.camelcase
+          model = Kernel.const_get(model)
+          model.column_names.grep(/(available)/)
+          accessor = options[:accessor] || $1
+
+
+          @resources_available = if options[:class_method]
+            model.send(options[:accessor])
+          else
+            id = options[:id] || params[options[:params_id_key]] || params[:id]
+            @instance = model.find(id)
+            @instance.send(accessor)
+          end
+          
+
+          flash_key = options[:flash_key] || :warning
+          message = options [:message] || "Your request will not be processed " +
+            "because the resource you require is no longer available." 
+
+          if @resources_avialable > 0
+            flash[flash_key] = message unless message.blank?
+            if block_given?
+              instance_eval(&block)
+            else
+              template_to_use = options[:template] || File.join(controller_name, action_name)
+              template_to_use.sub!(/(_resource_unavailable)?$/, "_resource_unavailable")
+              respond_to do |format|
+                format.html {
+                  if template_exists?(template_to_use)
+                    render :file => template_to_use, :status => 409
+                  else
+                    redirect_to :back#, :status => 409
+                  end
+                }
+
+                format.js {
+                  if template_exists?(template_to_use)
+                    render :file => template_to_use,  :status => 409
+                  else
+                    render(:update, :status => 409) do |page|
+
+                      page.redirect_to :back
+                      alert(message)
+                    end
+
+                  end
+                  flash.discard
+                }
+              end
+            end
+          end
+        end
+
+
         private
 
         # Define template_exists? for Rails 2.3
         unless ActionController::Base.private_instance_methods.include? 'template_exists?'
-            def template_exists? (template = "#{controller_name}/#{action_name}")
-                self.view_paths.find_template(template, response.template.template_format)
-            rescue ActionView::MissingTemplate
-                false
-            end
+          def template_exists? (template = "#{controller_name}/#{action_name}")
+            self.view_paths.find_template(template, response.template.template_format)
+          rescue ActionView::MissingTemplate
+            false
+          end
         end
 
       end #InstanceMethods
