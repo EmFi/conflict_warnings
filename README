@@ -41,6 +41,10 @@ Requirements
 
 None.
 
+Recommendations
+===============
+
+Use touch as provided in Rails 2.3.3 or my acts_as_touchable plugin (http://github.com/EmFi/acts_as_touchable), to simplify interaction between models with parent-children relationships. The touch methods mentioned will update a parent model when a child is updated. Allowing you to easily implement a system where a parent model has the updated at timestamp of it's most recently changed descendant.
 
 Installation
 =============
@@ -181,16 +185,13 @@ user.
 <div id="warnings">
 </div>
 <div id="static_content">
-..
-..
-..
+...
 </div>
 <div id="dynamic_content">
-<=%render :partial => dynamic_content%>
+    <=%render :partial => dynamic_content%>
 </div>
-..
-..
-link_to_remote_with_timestamp "Confirm", confirm_sample_path(@sample)
+...
+<%=link_to_remote_with_timestamp "Confirm", confirm_sample_path(@sample)%>
 
 --controllers/sample_controller_rb--
 class SampleController < ApplicationController
@@ -238,24 +239,21 @@ catch_resource_conflit Example
 <div id="warnings">
 </div>
 <div id="static_content">
-..
-..
-..
+    ...
 </div>
 <div id="tickets_left">
-There are <%=@event.tickets_left%> tickets available.
+    There are <%=@event.tickets_left%> tickets available.
 </div>
-..
-..
-link_to_remote "Buy Now", new_event_ticket_path(@event)
+...
+<%=link_to_remote "Buy Now", new_event_ticket_path(@event)%>
 
 --controllers/events_controller_rb--
 class EventTicketController < ApplicationController
     catch_resources_conflicts :only => :new, :accessor => :tickets_left,
         :model => :event, :params_id_key => :event_id
 
-    def buy
-        #not executed if event
+    def new
+        #not executed if event.find(params[:event_id]).tickets_left is false or non positive.
         ...
     end
     ...
