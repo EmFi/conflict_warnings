@@ -191,7 +191,7 @@ module ConflictWarnings #:nodoc:
           accessor = options[:accessor] || $1
 
 
-          @resources_available = if options[:class_method]
+          @result = if options[:class_method]
             model.send(options[:accessor])
           else
             id = options[:id] || params[options[:params_id_key]] || params[:id]
@@ -204,7 +204,8 @@ module ConflictWarnings #:nodoc:
           message = options [:message] || "Your request will not be processed " +
             "because the resource you require is no longer available." 
 
-          if @resources_avialable > 0
+          unless (@result.is_a?(Numeric) && @result.respond_to?(">") && @result > 0) || @result
+          
             flash[flash_key] = message unless message.blank?
             if block_given?
               instance_eval(&block)
