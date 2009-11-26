@@ -69,7 +69,7 @@ module ConflictWarnings #:nodoc:
         @@common_valid_keys = [
         
           :message, :flash_key, :except, :only, :model, :id,
-          :accessor, :params_id_key, :template ]
+          :accessor, :params_id_key, :find_options, :template ]
 
         @@valid_keys_for_conflict_warnings = [
           :simulate_conflict_on_requests_before, :simulate_conflict_on_requests_after,
@@ -128,7 +128,12 @@ module ConflictWarnings #:nodoc:
             accessor = options[:accessor] || $1
 
             id = options[:id] || params[options[:params_id_key]] || params[:id]
-            @instance = model.find(id)
+            if id
+              find_options = {:conditions => {:id => id}}
+            elsif options[:find_options]
+              find_options = options[:find_options]
+            end
+            @instance = model.find(:first, find_options)
             @instance.send(accessor)
           end
           @redirect_requests_after = options[:simulate_conflict_on_requests_after]
@@ -177,8 +182,8 @@ module ConflictWarnings #:nodoc:
         end
 
         def redirect_if_resource_unavailable(options = {},&block)
-          if params[options[:params_id_key]].nil? && params[:id].nil? && 
-              options[:id].nil? && options[:class_method].nil?
+          if [params[options[:params_id_key]], params[:id],
+              options[:id], options[:class_method],options[:find_options]].all?{|option|option.nil?}
             raise ArgumentError, "catch_resource_conflicts: You must supply a " +
               "method of determining which resource to work with. "+
               "Please see conflict_warnings documentation."
@@ -195,7 +200,13 @@ module ConflictWarnings #:nodoc:
             model.send(options[:accessor])
           else
             id = options[:id] || params[options[:params_id_key]] || params[:id]
-            @instance = model.find(id)
+            if id
+              find_options = {:conditions => {:id => id}}
+            elsif options[:find_options]
+              find_options = options[:find_options]
+            end
+            @instance = model.find(:first, find_options)
+            
             @instance.send(accessor)
           end
           

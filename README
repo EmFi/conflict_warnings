@@ -110,6 +110,10 @@ Accepted options common to both filters:
 :params_id_key - params hash key linking to the id to be used in conjunction
    with options[:model] an options[:accessor] to determine conflicts.
 
+:find_options = Sometimes an id key isn't enough to identify the record to 
+   use in determining if there is a problem. Options are passed to find and 
+   are only used if params_id_key is not given.
+
 :accessor - method in model that returns the value to be used in identifying conflicts.
     In catch_conflicts the default is updated_at or updated_on, if such a column
     exists.
