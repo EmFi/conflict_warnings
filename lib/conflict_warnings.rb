@@ -134,7 +134,7 @@ module ConflictWarnings #:nodoc:
               find_options = options[:find_options]
             end
             @instance = model.find(:first, find_options)
-            @instance.send(accessor)
+            @instance && @instance.send(accessor)
           end
           @redirect_requests_after = options[:simulate_conflict_on_requests_after]
           time_stamp_key = options[:time_stamp_key] || :page_rendered_at
@@ -207,7 +207,7 @@ module ConflictWarnings #:nodoc:
             end
             @instance = model.find(:first, find_options)
             
-            @instance.send(accessor)
+            @instance && @instance.send(accessor)
           end
           
 
