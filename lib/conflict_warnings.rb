@@ -124,8 +124,8 @@ module ConflictWarnings #:nodoc:
             model = options[:model] || self.controller_name.singularize
             model = model.to_s.camelcase
             model = Kernel.const_get(model)
-            model.column_names.grep(/(updated_(at|on))/)
-            accessor = options[:accessor] || $1
+            accessor = options[:accessor] || model.column_names.grep(/(updated_(at|on))/).first
+            
 
             id = options[:id] || params[options[:params_id_key]] || params[:id]
             if id
@@ -134,7 +134,7 @@ module ConflictWarnings #:nodoc:
               find_options = options[:find_options]
             end
             @instance = model.find(:first, find_options)
-            @instance && @instance.send(accessor)
+            @instance && accessor && @instance.send(accessor)
           end
           @redirect_requests_after = options[:simulate_conflict_on_requests_after]
           time_stamp_key = options[:time_stamp_key] || :page_rendered_at
@@ -152,7 +152,7 @@ module ConflictWarnings #:nodoc:
               instance_eval(&block)
             else
               template_to_use = options[:template] || File.join(controller_name, action_name)
-              template_to_use.sub!(/_conflict)?$/, "_conflict")
+              template_to_use.sub!(/(_conflict)?$/, "_conflict")
               respond_to do |format|
                 format.html {
                   if template_exists?(template_to_use)
@@ -192,8 +192,7 @@ module ConflictWarnings #:nodoc:
           model = options[:model] || self.controller_name.singularize
           model = model.to_s.camelcase
           model = Kernel.const_get(model)
-          model.column_names.grep(/(available)/)
-          accessor = options[:accessor] || $1
+          accessor = options[:accessor] || model.column_names.grep(/(available)/).first
 
 
           @result = if options[:class_method]
@@ -207,7 +206,7 @@ module ConflictWarnings #:nodoc:
             end
             @instance = model.find(:first, find_options)
             
-            @instance && @instance.send(accessor)
+            @instance && accessor && @instance.send(accessor)
           end
           
 
