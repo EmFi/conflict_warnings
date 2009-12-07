@@ -27,13 +27,14 @@ the referring page. The most common uses of catch_conflicts compare the time at
 which the referrant was rendered against the updated_at field on the record to
 be changed.
 
-Using catch_resource_conflicts is a simpler way of identifying problem cases.
+Using resources is much simpler. Problem cases are identified by records that 
+have a non positve value in the specified field. 
 
 In either case, Conflict Warnings will make reasonable guesses when options are
 omitted.
 
-See the catch_conflicts section for more details on options and uses.
-
+See the catch_conflicts and catch_resource_conflicts sections for more details
+on options and uses.
 
 
 Requirements
@@ -55,6 +56,9 @@ From the root of your rails project run the following command:
 
 Usage
 =====
+
+ActionView::Helpers:
+========
 
 link_to_with_timestamp
 ----------------------
@@ -78,8 +82,8 @@ to link_to_with_timestamp. Allowing for AJAX conflict warnings that successfully
 fall back go html requests.
 
 
-Filters
--------
+ActionController::Base::Class Methods
+=======================================
 
 catch_conflicts and catch_resource_conflict each adds a before_filter call
 to a controller class.
@@ -96,7 +100,7 @@ either executes the provided block, renders the associated template, or takes
 the default action.
 
 
-Accepted options common to both filters:
+Accepted options common to all methods:
 -----------------------------------------
 
 :model - ActiveRecord model name that is use to determine if
@@ -110,9 +114,9 @@ Accepted options common to both filters:
 :params_id_key - params hash key linking to the id to be used in conjunction
    with options[:model] an options[:accessor] to determine conflicts.
 
-:find_options = Sometimes an id key isn't enough to identify the record to 
-   use in determining if there is a problem. Options are passed to find and 
-   are only used if params_id_key is not given.
+:find_options - options passed to find, in selecting a record use in identifying
+   conflicts. Used only if :params_id_key is not supplied. 
+   
 
 :accessor - method in model that returns the value to be used in identifying conflicts.
     In catch_conflicts the default is updated_at or updated_on, if such a column
@@ -138,20 +142,24 @@ Accepted options common to both filters:
 
 :except, :only - arguments to be passed to the underlying before_filter call
 
-&block - If you want to write your own respond_to do |format|
-    block the option is availble to you.
+&block - Yielded to respond_to
 
 
+catch_conflicts(options = {}, &block)
+--------------------------------------
 
-catch_conflicts options = {}, &block
--------------------------------------
+catch_conflicts is a helper that creates a before filter using
+redirect_if_conflict. catch_conflict compares a timestamp embedded in the 
+requested url against a deadline to identify conflicts. Without any arguments, 
+the model, id, and accessor are used to select the deadline. Unless options 
+dictate otherwise, the model, is taken from the controller name, id is from 
+the params[:id] field, and accessor is the updated_at accessor on the instance
+of the model with the given id.
 
-catch_conflicts is a filter that compares a timestamp embedded in the requested
-url against a deadline to identify conflicts. Without any arguments, the model,
-id, and accessor are used to select the deadline. Unless options dictate otherwise,
-the model, is taken from the controller name, id is from the params[:id] field,
-and accessor is the updated_at accessor on the instance of the model with the given id.
-See the other options for other ways of specifying the deadline.
+If a record cannot be found with the given options, then the request will
+proceed without triggering the conflict action.
+
+See the common options for other ways of specifying the deadline.
 
 A conflict is defined by a request after the deadline containing a timestamp 
 before the deadline.
@@ -214,18 +222,23 @@ page.replace_html :warning, "We cannot complete your request at this time."
 page.replace html :dynamic_content, render :partial => 'sample/dynamic_content'
 page.visual_effect :highlight :dynamic_content, :duration => 5
 
+catch_resource_conflict(options = {}, &block)
+---------------------------------------------
 
-catch_resource_conflicts options = {}, &block
-----------------------------------------------
-catch_resource_conflicts is a filter that blocks requests when a resource is
-unavailable. Without any arguments, the model, id, and accessor are used to
+catch_resource_conflicts is a helper that creates a before filter using
+redirect_if_resource_conflict. catch_resourece_conflict  blocks requests 
+when a resource is unavailable. 
+
+Without any arguments, the model, id, and accessor are used to
 select the resource. Unless options dictate otherwise, the model, is taken from
 the controller name, id is from the params[:id] field, and accessor is the first
 field containing the name "available" on the instance of the model with the
 given id.
 
+If a record cannot be found with the given options, then the request will
+proceed without triggering the conflict action.
 
-See the other options for other ways of specifying the deadline.
+See the common options for other ways of specifying the deadline.
 
 A conflict is defined by the accessor returning false, or an numeric value of 0
 or less.
@@ -236,7 +249,73 @@ Accepted Options:
 instead of an instance method. So catch_resource_conflicts will use
 model.accessor instead of model.find(id).accessor to identify conflicts.
 
-catch_resource_conflit Example
+
+ActionController::Base::InstanceMethods
+========================================
+
+Some times the prepackaged filters do not give you the control you need. So the
+methods used to create filters in the class methods are provided for use in
+custom filters. 
+
+redirect_if_conflict(options = {}, &block)
+-------------------------------------
+
+redirect_if_conflict is intended to be called in a filter. It
+compares a timestamp embedded in the requested url against a deadline to 
+identify conflicts and redirects/renders the request in the case of a conflict.
+Without any arguments, the model, id, and accessor are used 
+to select the deadline. Unless options dictate otherwise, the model, is taken 
+from the controller name, id is from the params[:id] field, and accessor is the 
+updated_at accessor on the instance of the model with the given id.
+See the other options for other ways of specifying the deadline.
+
+A conflict is defined by a request after the deadline containing a timestamp 
+before the deadline.
+
+Accepted Options:
+
+:time_stamp_key - params hash key containing the timestamp the requesting page was
+    rendered. Default value is :page_rendered_at
+
+
+:simulate_conflict_on_requests_before - instead of dynamically determining
+    a deadline to identify conflicts allows you to choose one. Treats all
+    requests from pages rendered before this value as a conflict. Default value
+    is nil. Useful for enforcing users to take actions following recent
+    application updates.
+
+:simulate_conflict_on_requests_after - instead of dynamically determining
+    a deadline to identify conflicts allows you to choose one. Treat all
+    requests from pages rendered after this value as a conflict. Default value
+    is nil. Useful for disabling portions of your application at a specified
+    time.
+
+
+
+redirect_if_resource_unavailable(options = {}, &block)
+----------------------------------------------
+
+redirect_if_conflict is intended to be called in a filter. It
+identify conflicts based on the value returned by an accessor
+of a model and redirects/renders the request in the case of a conflict.
+
+The model and idfind_options options are used to select the resource.
+Unless options dictate otherwise, the model, is taken from
+the controller name, id is from the params[:id] field, and accessor is the first
+field containing the name "available" on the instance of the model with the
+given id.
+
+A conflict is defined by the accessor returning false, or an numeric value of 0
+or less.
+
+Accepted Options:
+
+:class_method - Default is nil. If true, accessor is treated as a class method
+instead of an instance method. So catch_resource_conflicts will use
+model.accessor instead of model.find(id).accessor to identify conflicts.
+
+
+catch_resource_conflict Example
 ------------------------------
 
 --views/events/show.html.erb--
@@ -268,6 +347,8 @@ end
 page.replace_html :warning, "The show you requested has sold out."
 page.replace html :tickets_left, render "No tickets available."
 page.visual_effect :highlight :tickets_left, :duration => 5
+
+
 
 
 

@@ -84,7 +84,7 @@ module ConflictWarnings #:nodoc:
           except = options[:except] ? options.delete(:except) : nil
           only = options[:only] ? options.delete(:only) : nil
           before_filter :except => except, :only => only do |controller|
-            controller.redirect_if_content_changed(options,&block)
+            controller.redirect_if_conflict(options,&block)
           end
         end
 
@@ -101,7 +101,7 @@ module ConflictWarnings #:nodoc:
       end
 
       module InstanceMethods
-        def redirect_if_content_changed(options = {},&block)
+        def redirect_if_conflict(options = {},&block)
           if options[:simulate_conflict_on_requests_before].nil? && 
               options[:simulate_conflict_on_requests_after.nil?] &&
               params[options[:params_id_key]].nil? && params[:id].nil? && options[:id].nil?
