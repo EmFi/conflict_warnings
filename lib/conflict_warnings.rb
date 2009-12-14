@@ -211,11 +211,16 @@ module ConflictWarnings #:nodoc:
       
       module InstanceMethods
         def redirect_if_conflict(options = {},&block)
+          
           self.class.valid_options_for_conflict_warnings? :redirect_if_conflict, options
+          model = options[:model] || self.controller_name.singularize
+            instance = model if model.is_a?(ActiveRecord::Base)
+            model = get_model model
           if options[:simulate_conflict_on_requests_before].nil? &&
               options[:simulate_conflict_on_requests_after].nil? &&
               CWInstanceSelectionKeys.all?{|k| options[k].nil?} &&
-              params[options[:params_id_key]].nil? && params[:id].nil?
+              [params[options[:params_id_key]], params[:id],
+              params[model.to_s.underscore + "_id"]].all? {|k| k.nil?}
             raise ArgumentError, "catch_conflicts: You must provide a method of " +
               "generating a time used to decide which requests are fresh. Please " +
               "see redirect if conflict documentation for more details."
@@ -224,23 +229,19 @@ module ConflictWarnings #:nodoc:
             # no timestamp provided
             return
             
-          end
-          instance = nil
+          end          
           redirect_requests_before =
             if options[:simulate_conflict_on_requests_before]
             options[:simulate_conflict_on_requests_before]
           elsif options[:simulate_conflict_on_requests_after]
             nil
           else
-            model = options[:model] || self.controller_name.singularize
-            instance = model if model.is_a?(ActiveRecord::Base)
-            model = get_model model
             accessor = options[:accessor] || model.column_names.grep(/(updated_(at|on))/).first
             
             unless instance || model.nil?
               id = options[:id] || params[options[:params_id_key]] || 
                 (options[:params_id_key].nil? &&( params[model.to_s.underscore + "_id"] ||params[:id]))
-               if options[:find_options]
+              if options[:find_options]
                 find_options = instance_eval(&options[:find_options])
               elsif id
                 find_options = {:conditions => {:id => id}}
@@ -310,21 +311,29 @@ module ConflictWarnings #:nodoc:
         
         def redirect_if_resource_unavailable(options = {},&block)
           self.class.valid_options_for_conflict_warnings? :redirect_if_resource_unavailable, options
+          model = options[:model] || self.controller_name.singularize
+          instance = model if model.is_a?(ActiveRecord::Base)
+          model = get_model model
           if CWInstanceSelectionKeys.all?{|k| options[k].nil?} &&
-              [params[options[:params_id_key]], params[:id], options[:class_method]].all? {|option|
+              [params[options[:params_id_key]], params[model.to_s.underscore + "_id"],
+              params[:id], options[:class_method]].all? {|option|
               option.nil?}
             raise ArgumentError, "catch_resource_conflicts: You must supply a " +
               "method of determining which resource to work with. "+
               "Please see redirect if resource unavailable documentation."
           end
-          instance = nil
-          model = options[:model] || self.controller_name.singularize
-          instance = model if model.is_a?(ActiveRecord::Base)
-          model = get_model model
-          accessor = options[:accessor] || model.column_names.grep(/(available)/).first          
+          accessor = options[:accessor]
+          accessor ||= case options[:class_method]
+          when nil           
+            model.column_names.grep(/(available)/).first
+          when true
+            model.methods.grep(/available$/).first
+          else
+            options[:class_method]
+          end
           
           result = if options[:class_method]
-            model.send(options[:accessor])
+            model.send(accessor)
           else
             unless instance
               id = options[:id] || params[options[:params_id_key]] ||

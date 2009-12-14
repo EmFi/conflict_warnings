@@ -1,13 +1,13 @@
 require File.expand_path(File.dirname(__FILE__) + '/../test_helper')
 require File.expand_path(File.dirname(__FILE__) + '/../functional_test_helper')
 
-class ConflictWarningsBasicTest < ActionController::TestCase
+class RedirectIfResourceUnavailableWarningsBasicTest < ActionController::TestCase
   #  class StubController < ActionController::Base
   #     ConflictWarningsTest::ControllerBits
   #  end
   #  #fixtures :resources, :resources, :resources_with_custom_accessors,
   #  :resources_with_custom_accessors, :Resources_with_updated_ats
-  context "catch resource conflicts" do
+  context "redirect if resource unavailables" do
     teardown do
       @controller =nil
       @request = nil
@@ -23,24 +23,26 @@ class ConflictWarningsBasicTest < ActionController::TestCase
     context "without options" do
       context "accepts html" do
         setup do
-          class CatchResourceConflictWithoutOptionsTestController < ::ConflictWarningsTest::ControllerStub
+          class RedirectIfResourceUnavailableWithoutOptionsTestController < ::ConflictWarningsTest::ControllerStub
             #include ::ConflictWarningsTest::ControllerBits
           
-            catch_resource_conflicts
+            before_filter do |controller|
+              controller.redirect_if_resource_unavailable()
+            end
             #cattr_accessor :controller_name
           end
-          @controller = CatchResourceConflictWithoutOptionsTestController.new
+          @controller = RedirectIfResourceUnavailableWithoutOptionsTestController.new
           ActionController::Routing::Routes.draw {|map|
             map.connect "/:action", :controller => @controller.controller_path
             map.connect "/:action/:id", :controller => @controller.controller_path
           }
-          CatchResourceConflictWithoutOptionsTestController.view_paths = ['...']
+          RedirectIfResourceUnavailableWithoutOptionsTestController.view_paths = ['...']
         end
         context "with basic resource" do
           setup do
-            CatchResourceConflictWithoutOptionsTestController.controller_name = "resources"
+            RedirectIfResourceUnavailableWithoutOptionsTestController.controller_name = "resources"
           end
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "raise argument error" do
                 assert_raise(ArgumentError) do
@@ -55,7 +57,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   assert_redirected_to "/"
                 end
               end
-              context "With resource available" do
+              context "With resource unavailable" do
                 should "not redirect" do
                   get :action1, :id => 3
                   assert_response :success
@@ -64,7 +66,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
 
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without template" do
                 should "redirect" do
@@ -77,8 +79,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               context "with template" do
                 should "not redirect and render default template" do
-                  CatchResourceConflictWithoutOptionsTestController.append_view_path TestViewPath
-                  @controller = CatchResourceConflictWithoutOptionsTestController.new
+                  RedirectIfResourceUnavailableWithoutOptionsTestController.append_view_path TestViewPath
+                  @controller = RedirectIfResourceUnavailableWithoutOptionsTestController.new
                   get :action1, :id => 2
                   assert_response 409
                   assert_template("action1_resource_unavailable")
@@ -86,15 +88,15 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end # context with template
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
           context "alternate id key based on model name" do
-            context "without conflict" do
+            context "without available" do
               should "not redirect" do
                 get :action1, :resource_id => 3
                 assert_response :success
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :resource_id => 2
                 assert_redirected_to "/"
@@ -105,9 +107,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
         context "with custom accessible resource" do
           setup do
-            CatchResourceConflictWithoutOptionsTestController.controller_name = "resource_with_custom_accessors"
+            RedirectIfResourceUnavailableWithoutOptionsTestController.controller_name = "resource_with_custom_accessors"
           end
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "raise argument error" do
                 assert_raise(ArgumentError) do
@@ -115,7 +117,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                 end
               end
             end            
-            context "With resource available" do
+            context "With resource unavailable" do
               should "not redirect" do
                 get :action1, :id => 3
                 assert_redirected_to "/"
@@ -123,7 +125,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
           
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource parameter" do
               context "with resource unset avaliability" do
                 should "not redirect " do
@@ -133,7 +135,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with template" do
                 should "not redirect and render default template" do
-                  CatchResourceConflictWithoutOptionsTestController.append_view_path TestViewPath
+                  RedirectIfResourceUnavailableWithoutOptionsTestController.append_view_path TestViewPath
                   get :action1, :id => 2
                   assert_response 409
                 end
@@ -141,13 +143,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
           context "alternate id key based on model name" do
-            context "without conflict" do
+            context "without available" do
               should "not redirect" do
                 get :action1, :resource_with_custom_accessor_id => 3
                 assert_redirected_to "/"
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :resource_with_custom_accessor_id => 2
                 assert_redirected_to "/"
@@ -158,22 +160,24 @@ class ConflictWarningsBasicTest < ActionController::TestCase
       end #accepts html
       context "accepts js" do
         setup do
-          class CatchResourceConflictWithoutOptionsJSTestController < ::ConflictWarningsTest::ControllerStub
+          class RedirectIfResourceUnavailableWithoutOptionsJSTestController < ::ConflictWarningsTest::ControllerStub
             #include ::ConflictWarningsTest::ControllerBits
 
-            catch_resource_conflicts
+            before_filter do |controller|
+              controller.redirect_if_resource_unavailable()
+            end
             #cattr_accessor :controller_name
           end
-          @controller = CatchResourceConflictWithoutOptionsJSTestController.new
+          @controller = RedirectIfResourceUnavailableWithoutOptionsJSTestController.new
           ActionController::Routing::Routes.draw {|map|
             map.connect "/:action", :controller => @controller.controller_path
             map.connect "/:action/:id", :controller => @controller.controller_path
           }          
-          CatchResourceConflictWithoutOptionsJSTestController.view_paths = ['...']
+          RedirectIfResourceUnavailableWithoutOptionsJSTestController.view_paths = ['...']
         end
         context "with basic resource" do
           setup do
-            CatchResourceConflictWithoutOptionsJSTestController.controller_name = "resources"
+            RedirectIfResourceUnavailableWithoutOptionsJSTestController.controller_name = "resources"
           end
           context "invalid inputs" do
             context "without resource parameter" do
@@ -191,8 +195,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
             end
           end
-          context "without conflict" do
-            context "With resource available" do
+          context "without available" do
+            context "With resource unavailable" do
               should "not redirect" do
                 get :action1, :id => 3, :format => "js"
                 assert_response :success
@@ -200,7 +204,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
 
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without template" do
                 should "redirect" do
@@ -213,8 +217,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               context "with template" do
                 should "not redirect and render default template" do
-                  CatchResourceConflictWithoutOptionsJSTestController.append_view_path TestViewPath
-                  @controller = CatchResourceConflictWithoutOptionsJSTestController.new
+                  RedirectIfResourceUnavailableWithoutOptionsJSTestController.append_view_path TestViewPath
+                  @controller = RedirectIfResourceUnavailableWithoutOptionsJSTestController.new
                   get :action1, :id => 2,  :format => "js"
                   assert_response 409
                   assert_template("action1_resource_unavailable.rjs")
@@ -222,15 +226,15 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end # context with template
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
           context "alternate id key based on model name" do
-            context "without conflict" do
+            context "without available" do
               should "not redirect" do
                 get :action1, :resource_id => 3
                 assert_response :success
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :resource_id => 2
                 assert_redirected_to "/"
@@ -241,113 +245,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
       end #accepts js
     end # context without options
-    context "using options" do
-      context "filter options" do
-        context "with only" do
-          setup do
-            class CatchResourceConflictWithOnlyTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :only => :action1
-            end
-            CatchResourceConflictWithOnlyTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithOnlyTestsController.new
-
-
-            ActionController::Routing::Routes.draw {|map|
-              map.connect "/:action", :controller => @controller.controller_path
-              map.connect "/:action/:id", :controller => @controller.controller_path
-            }
-
-          end
-          context "with basic resource" do
-            setup do
-              CatchResourceConflictWithOnlyTestsController.controller_name = "resources"
-            end
-            context "without conflict" do              
-              should "not redirect" do
-                get :action1, :id => 3
-                assert_response :success
-              end
-            end #without conflict
-            context "with conflict" do
-              context "with resource unavailable" do
-                should "redirect" do
-
-                  get :action1, :id => 2
-                  assert_redirected_to "/"
-                  assert_match /no longer available/, flash[:warning]
-                end
-                
-                context "on action not covered in only" do
-                  should "not redirect" do
-                    get :action2, :id => 2
-                    assert_response :success
-                  end # should not redirect and render default template
-                end # on action not covered in only
-              end # context with resource unavailable
-
-            end # context with conflict
-          end # context with basic resource
-
-        end # with only
-        context "with except" do
-          setup do
-            class CatchResourceConflictWithExceptTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :except => :action2
-            end
-            CatchResourceConflictWithExceptTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithExceptTestsController.new
-
-
-            ActionController::Routing::Routes.draw {|map|
-              map.connect "/:action", :controller => @controller.controller_path
-              map.connect "/:action/:id", :controller => @controller.controller_path
-            }
-
-          end
-          context "with basic resource" do
-            setup do
-              CatchResourceConflictWithExceptTestsController.controller_name = "resources"
-            end
-            context "without conflict" do
-              context "without resource parameter" do
-                should "not redirect" do
-                  get :action1, :id => 3
-                  assert_response :success
-                end
-              end
-            end #without conflict
-            context "with conflict" do
-              context "with resource unavailable" do
-                context "on unexcepted action" do
-                  should "redirect" do
-
-                    get :action1, :id => 2
-                    assert_redirected_to "/"
-                    assert_match /no longer available/, flash[:warning]
-                  end
-                end # on action in only
-
-                context "on action not covered by except" do
-                  should "not redirect" do
-                    get :action2, :id => 2
-                    assert_response :success
-                  end # should not redirect and render default template
-                end # on action not covered in only
-              end # context with resource unavailable
-
-            end # context with conflict
-          end # context with basic resource
-
-        end # with except
-      end #filter options
+    context "using options" do      
       context "with flash key" do
         context "without message" do
           setup do
-            class CatchResourceConflictWithFlashKeyTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :flash_key => :error
+            class RedirectIfResourceUnavailableWithFlashKeyTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :flash_key => :error)
+              end
             end
-            CatchResourceConflictWithFlashKeyTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithFlashKeyTestsController.new
+            RedirectIfResourceUnavailableWithFlashKeyTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithFlashKeyTestsController.new
 
 
             ActionController::Routing::Routes.draw {|map|
@@ -358,9 +266,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithFlashKeyTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithFlashKeyTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
               context "without resource parameter" do
                 should "not set flash[:error]" do
                   get :action1, :id => 3
@@ -368,8 +276,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   assert_no_match /not be processed/, flash[:error]
                 end
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               context "with resource unavailable" do
               
                 should "set flash[:error]" do
@@ -381,16 +289,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               
               end # context with resource unavailable
 
-            end # context with conflict
+            end # context with unavailable
           end # context with basic resource
         end # context without message
         context "with message" do
           setup do
-            class CatchResourceConflictWithFlashKeyAndMessageTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :flash_key => :error, :message => "CONFLICT!"
+            class RedirectIfResourceUnavailableWithFlashKeyAndMessageTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :flash_key => :error, :message => "CONFLICT!")
+              end
             end
-            CatchResourceConflictWithFlashKeyAndMessageTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithFlashKeyAndMessageTestsController.new
+            RedirectIfResourceUnavailableWithFlashKeyAndMessageTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithFlashKeyAndMessageTestsController.new
 
 
             ActionController::Routing::Routes.draw {|map|
@@ -401,9 +311,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithFlashKeyAndMessageTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithFlashKeyAndMessageTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
               context "without resource parameter" do
                 should "not set flash[:error]" do
                   get :action1, :id => 3
@@ -411,9 +321,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   assert_no_match /CONFLICT!/, flash[:error]
                 end
               end
-            end #without conflict
-            context "with conflict" do
-              context "with resource unavailable" do               
+            end #without available
+            context "with unavailable" do
+              context "with resource unavailable" do
                 should "set flash[:error]" do
 
                   get :action1, :id => 2
@@ -423,17 +333,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end # context with resource unavailable
             end # with basic resource
-          end # context with conflict
+          end # context with unavailable
         end # context with message
       end # with flash key
       context "without flash key" do
         context "with message" do
           setup do
-            class CatchResourceConflictWithMessageTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :message => "CONFLICT!"
+            class RedirectIfResourceUnavailableWithMessageTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :message => "CONFLICT!")
+              end
             end
-            CatchResourceConflictWithMessageTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithMessageTestsController.new
+            RedirectIfResourceUnavailableWithMessageTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithMessageTestsController.new
 
 
             ActionController::Routing::Routes.draw {|map|
@@ -444,17 +356,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithMessageTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithMessageTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
               should "set flash[:error]" do
 
                 get :action1, :id => 3
                 assert_response :success
                 assert_no_match /CONFLICT!/, flash[:warning]
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               context "with resource unavailable" do
                 context "without resource parameter" do
                   should "sets flash[:error]" do
@@ -472,25 +384,27 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end # context with resource unavailable
 
-            end # context with conflict
+            end # context with unavailable
           end # context with basic resource
           context "accepts js" do
             setup do
-              class CatchResourceConflictWithMessageJSTestController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :message => "CONFLICT"
+              class RedirectIfResourceUnavailableWithMessageJSTestController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :message => "CONFLICT")
+                end
               end
-              @controller = CatchResourceConflictWithMessageJSTestController.new
+              @controller = RedirectIfResourceUnavailableWithMessageJSTestController.new
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
                 map.connect "/:action/:id", :controller => @controller.controller_path
               }
-              CatchResourceConflictWithMessageJSTestController.view_paths = ['...']
+              RedirectIfResourceUnavailableWithMessageJSTestController.view_paths = ['...']
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithMessageJSTestController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithMessageJSTestController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "raise ArgumentError" do
                     assert_raise(ArgumentError) do
@@ -500,7 +414,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                 end
                 
                   
-                context "With resource available" do
+                context "With resource unavailable" do
                   should "not redirect" do
                     get :action1, :id => 3, :format => "js"
                     assert_response :success
@@ -509,7 +423,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end
 
-              context "with conflict" do
+              context "with unavailable" do
                 context "with resource unavailable" do
 
                   context "without template" do
@@ -532,8 +446,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   context "with template" do
                     should "not redirect and render default template" do
-                      CatchResourceConflictWithMessageJSTestController.append_view_path TestViewPath
-                      @controller = CatchResourceConflictWithMessageJSTestController.new
+                      RedirectIfResourceUnavailableWithMessageJSTestController.append_view_path TestViewPath
+                      @controller = RedirectIfResourceUnavailableWithMessageJSTestController.new
                       get :action1, :id => 2, :format => "js"
                       assert_response 409
                       assert_template("action1_resource_unavailable.rjs")
@@ -541,7 +455,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   end # context with template
                 end # context with resource unavailable
 
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
 
           end #acceepts js
@@ -549,11 +463,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
       end # context without flashkey
       context "with model" do
         setup do
-          class CatchResourceConflictWithModelTestsController < ::ConflictWarningsTest::ControllerStub
-            catch_resource_conflicts :model => ResourceWithCustomAccessor
+          class RedirectIfResourceUnavailableWithModelTestsController < ::ConflictWarningsTest::ControllerStub
+            before_filter do |controller|
+              controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor)
+            end
           end
-          CatchResourceConflictWithModelTestsController.view_paths = ['...']
-          @controller = CatchResourceConflictWithModelTestsController.new
+          RedirectIfResourceUnavailableWithModelTestsController.view_paths = ['...']
+          @controller = RedirectIfResourceUnavailableWithModelTestsController.new
 
           ActionController::Routing::Routes.draw {|map|
             map.connect "/:action", :controller => @controller.controller_path
@@ -563,17 +479,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         end
         context "with basic resource" do
           setup do
-            CatchResourceConflictWithModelTestsController.controller_name = "resources"
+            RedirectIfResourceUnavailableWithModelTestsController.controller_name = "resources"
           end
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "redirect" do
                 get :action1, :id => 1
                 assert_redirected_to "/"
               end
             end
-          end #without conflict
-          context "with conflict" do
+          end #without available
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without resource parameter" do
                 should "redirect" do
@@ -588,17 +504,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
         end # context with basic resource
         context "with accessor" do
           context "with bogus accessor" do
             setup do
 
-              class CatchResourcEconflictWithModelAndBogusAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => "resource", :accessor => :bogus
+              class RedirectIfResourcEunavailableWithModelAndBogusAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => "resource", :accessor => :bogus)
+                end
               end
-              CatchResourcEconflictWithModelAndBogusAccessorTestsController.view_paths = ['...']
-              @controller = CatchResourcEconflictWithModelAndBogusAccessorTestsController.new
+              RedirectIfResourcEunavailableWithModelAndBogusAccessorTestsController.view_paths = ['...']
+              @controller = RedirectIfResourcEunavailableWithModelAndBogusAccessorTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -614,11 +532,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end # bogus accessor
           context "without id" do
             setup do
-              class CatchResourceConflictWithModelAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => ResourceWithCustomAccessor, :accessor => :resources_left
+              class RedirectIfResourceUnavailableWithModelAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor, :accessor => :resources_left)
+                end
               end
-              CatchResourceConflictWithModelAndAccessorTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndAccessorTestsController.new
+              RedirectIfResourceUnavailableWithModelAndAccessorTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndAccessorTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -629,17 +549,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndAccessorTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithModelAndAccessorTestsController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
                     get :action1, :id => 3
                     assert_response :success
                   end
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                 
                   should "not redirect" do
@@ -649,16 +569,16 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                 
                   end # context with resource unavailable
                 end
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
             context "alternate id key based on model name" do
-              context "without conflict" do
+              context "without available" do
                 should "not redirect" do
                   get :action1, :resource_with_custom_accessor_id => 3
                   assert_response :success
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 should "redirect" do
                   get :action1, :resource_with_custom_accessor_id => 2
                   assert_redirected_to "/"
@@ -669,11 +589,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           context "with id" do
             context "Non Existant resource" do
               setup do
-                class CatchResourceConflictWithModelAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :model => Resource, :id => 4
+                class RedirectIfResourceUnavailableWithModelAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :model => Resource, :id => 4)
+                  end
                 end
-                CatchResourceConflictWithModelAndNonExistantIdTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithModelAndNonExistantIdTestsController.new
+                RedirectIfResourceUnavailableWithModelAndNonExistantIdTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithModelAndNonExistantIdTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -684,9 +606,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithModelAndNonExistantIdTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithModelAndNonExistantIdTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
 
@@ -695,8 +617,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                     end
 
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "with resource should redirect" do
 
@@ -706,16 +628,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   end # context with resource unavailable
 
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #nonexistant resource
             context "Existing resource" do
               setup do
-                class CatchResourceConflictWithModelAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :model => Resource, :id => 3
+                class RedirectIfResourceUnavailableWithModelAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :model => Resource, :id => 3)
+                  end
                 end
-                CatchResourceConflictWithModelAndExistingIdTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithModelAndExistingIdTestsController.new
+                RedirectIfResourceUnavailableWithModelAndExistingIdTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithModelAndExistingIdTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -726,9 +650,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithModelAndExistingIdTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithModelAndExistingIdTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
 
@@ -737,8 +661,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                     end
 
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "with resource should redirect" do
 
@@ -748,7 +672,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   end # context with resource unavailable
 
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #exisitng resource
           end #with id
@@ -757,11 +681,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         context "with id" do
           context "Non Existant resource" do
             setup do
-              class CatchResourceConflictWithModelAccessorAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => ResourceWithCustomAccessor, :id => 4, :accessor=> :resources_left
+              class RedirectIfResourceUnavailableWithModelAccessorAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor, :id => 4, :accessor=> :resources_left)
+                end
               end
-              CatchResourceConflictWithModelAccessorAndNonExistantIdTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAccessorAndNonExistantIdTestsController.new
+              RedirectIfResourceUnavailableWithModelAccessorAndNonExistantIdTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAccessorAndNonExistantIdTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -772,9 +698,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAccessorAndNonExistantIdTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithModelAccessorAndNonExistantIdTestsController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
 
@@ -783,8 +709,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   end
 
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                   should "with resource should redirect" do
 
@@ -794,16 +720,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                 end # context with resource unavailable
 
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
           end #nonexistant resource
           context "Existing resource" do
             setup do
-              class CatchResourceConflictWithModelAccessorAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => ResourceWithCustomAccessor, :id => 3, :accessor=> :resources_left
+              class RedirectIfResourceUnavailableWithModelAccessorAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor, :id => 3, :accessor=> :resources_left)
+                end
               end
-              CatchResourceConflictWithModelAccessorAndExistingIdTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAccessorAndExistingIdTestsController.new
+              RedirectIfResourceUnavailableWithModelAccessorAndExistingIdTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAccessorAndExistingIdTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -814,9 +742,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAccessorAndExistingIdTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithModelAccessorAndExistingIdTestsController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
 
@@ -825,8 +753,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   end
 
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                   should "with resource should redirect" do
 
@@ -836,17 +764,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                 end # context with resource unavailable
 
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
           end #exisitng resource
         end #with id
         context "with params id key" do
           setup do
-            class CatchResourceConflictWithModelAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :model => ResourceWithCustomAccessor, :params_id_key => :name
+            class RedirectIfResourceUnavailableWithModelAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor, :params_id_key => :name)
+              end
             end
-            CatchResourceConflictWithModelAndParamsIdKeyTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithModelAndParamsIdKeyTestsController.new
+            RedirectIfResourceUnavailableWithModelAndParamsIdKeyTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithModelAndParamsIdKeyTestsController.new
 
 
             ActionController::Routing::Routes.draw {|map|
@@ -857,7 +787,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithModelAndParamsIdKeyTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithModelAndParamsIdKeyTestsController.controller_name = "resources"
             end           
             context "with resource unavailable" do
               context "without accessor" do
@@ -878,12 +808,14 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           context "with accessor" do
             context "without id" do
               setup do
-                class CatchResourceConflictWithModelAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                    :accessor => :resources_left, :params_id_key => :name
+                class RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                      :accessor => :resources_left, :params_id_key => :name)
+                  end
                 end
-                CatchResourceConflictWithModelAndParamsIdKeyAndAccessorTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithModelAndParamsIdKeyAndAccessorTestsController.new
+                RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndAccessorTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndAccessorTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -894,17 +826,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithModelAndParamsIdKeyAndAccessorTestsController.controller_name = "resources"
+                  RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndAccessorTestsController.controller_name = "resources"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "with resource parameter" do
                     should "not redirect" do
                       get :action1, :id => 1, :name => 3
                       assert_response :success
                     end
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "redirect" do
 
@@ -912,27 +844,40 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                       assert_redirected_to "/"
                     end
                   end # context with resource unavailable
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #context without id
             context "with id" do
-              should "raise error" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithModelAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                      :id => 2, :accessor=> :resource, :params_id_key => :name
+              setup do
+                class RedirectIfResourceUnavailableWithModelAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                      :id => 2, :accessor=> :resource, :params_id_key => :name)
                   end
                 end
+                @controller = RedirectIfResourceUnavailableWithModelAndParamsIdKeyAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
+              
               end
             end #with id
           end # with accessor
           context "without accessor" do
             context "with id" do
-              should "raise error" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithModelAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :model => Resource, :id => 2, :params_id_key => :name
+              setup do
+                  class RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :model => Resource, :id => 2, :params_id_key => :name)
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithModelAndParamsIdKeyAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end #with id
@@ -940,11 +885,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         end
         context "with find options" do
           setup do
-            class CatchResourceConflictWithModelAndFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :model => ResourceWithCustomAccessor, :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+            class RedirectIfResourceUnavailableWithModelAndFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor, :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+              end
             end
-            CatchResourceConflictWithModelAndFindOptionsTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithModelAndFindOptionsTestsController.new
+            RedirectIfResourceUnavailableWithModelAndFindOptionsTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsTestsController.new
 
             ActionController::Routing::Routes.draw {|map|
               map.connect "/:action", :controller => @controller.controller_path
@@ -954,17 +901,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithModelAndFindOptionsTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithModelAndFindOptionsTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
               context "without resource parameter" do
                 should "not redirect" do
-                  get :action1, :id => 1, :name => "Resources Available"
+                  get :action1, :id => 1, :name => "Resources Unavailable"
                   assert_redirected_to "/"
                 end
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               context "with resource unavailable" do
                 context "on action in only" do
                   context "without resource parameter" do
@@ -982,17 +929,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end # context with resource unavailable
 
-            end # context with conflict
+            end # context with unavailable
           end # context with basic resource
           context "with accessor" do
             context "without id" do
               setup do
-                class CatchResourceConflictWithModelAndFindOptionsAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                    :accessor => :resources_left, :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                class RedirectIfResourceUnavailableWithModelAndFindOptionsAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                      :accessor => :resources_left, :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                  end
                 end
-                CatchResourceConflictWithModelAndFindOptionsAndAccessorTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithModelAndFindOptionsAndAccessorTestsController.new
+                RedirectIfResourceUnavailableWithModelAndFindOptionsAndAccessorTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndAccessorTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -1003,17 +952,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithModelAndFindOptionsAndAccessorTestsController.controller_name = "resources"
+                  RedirectIfResourceUnavailableWithModelAndFindOptionsAndAccessorTestsController.controller_name = "resources"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
                       get :action1, :id => 1, :name => "Resources Available"
                       assert_response :success
                     end
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with available" do
                   context "with resource unavailable" do
                     
                     should "redirect" do
@@ -1025,76 +974,113 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   end # context with resource unavailable
 
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #context without id
             context "with id" do
-              should "raise ArgumentError" do
-                assert_raise(ArgumentError) do class CatchResourceConflictWithModelAndFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                      :id => 2, :accessor=> :resource,
-                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup do
+                class RedirectIfResourceUnavailableWithModelAndFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                        :id => 2, :accessor=> :resource,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end #with id
           end # with accessor
           context "with id" do
             context "without accessor" do
-              should "Raise ArgumentError"do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithModelAndFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :model => Resource, :id => 2,
-                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup  do
+                  class RedirectIfResourceUnavailableWithModelAndFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :model => Resource, :id => 2,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end # without accessor
           end #with id
           context "with params id key" do
             context "without accessor" do
-              should "raise ArgumentError" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithModelAndFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                      :params_id_key => :name, :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup do
+                  class RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                        :params_id_key => :name, :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end # without accessor
             context "with accessor" do
               context "without id" do
-                should "raise ArgumentError"do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                        :accessor => :resource_left, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                          :accessor => :resource_left, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
               end #context without id
               context "with id" do
-                should "raise ArgumentError" do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts :model => ResourceWithCustomAccessor,
-                        :id => 2, :accessor=> :resource, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable( :model => ResourceWithCustomAccessor,
+                          :id => 2, :accessor=> :resource, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
               end #with id
             end # with accessor
             context "without accessor" do
               context "with id" do
-                should "raise ArgumentError" do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts :model => Resource, :id => 2, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable( :model => Resource, :id => 2, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
 
               end #with id
@@ -1104,11 +1090,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         context "with class method" do
           context "with undefined class method" do
             setup do
-              class CatchResourceConflictWithModelAndUndefinedClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => :nothing
+              class RedirectIfResourceUnavailableWithModelAndUndefinedClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => :nothing)
+                end
               end
-              CatchResourceConflictWithModelAndUndefinedClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndUndefinedClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndUndefinedClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndUndefinedClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1118,7 +1106,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndUndefinedClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndUndefinedClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end          
               should "Raise NoMethodError" do
                 assert_raise(NoMethodError) do
@@ -1129,11 +1117,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #undefined class method
           context "that returns true" do
             setup do
-              class CatchResourceConflictWithModelAndTrueClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => :returns_true
+              class RedirectIfResourceUnavailableWithModelAndTrueClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => :returns_true)
+                end
               end
-              CatchResourceConflictWithModelAndTrueClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndTrueClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndTrueClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndTrueClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1143,7 +1133,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndTrueClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndTrueClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end
               should "not redirect" do
                 get :action1, :id => 2
@@ -1153,11 +1143,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns true
           context "that returns numeric" do
             setup do
-              class CatchResourceConflictWithModelAndTrueNumericClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => :resources_left
+              class RedirectIfResourceUnavailableWithModelAndTrueNumericClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => :resources_left)
+                end
               end
-              CatchResourceConflictWithModelAndTrueNumericClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndTrueNumericClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndTrueNumericClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndTrueNumericClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1167,7 +1159,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndTrueNumericClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndTrueNumericClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end
               should "not redirect" do
                 get :action1, :id => 2
@@ -1177,11 +1169,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns numeric
           context "that returns false" do
             setup do
-              class CatchResourceConflictWithModelAndFalseClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => :returns_false
+              class RedirectIfResourceUnavailableWithModelAndFalseClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => :returns_false)
+                end
               end
-              CatchResourceConflictWithModelAndFalseClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndFalseClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndFalseClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndFalseClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1191,7 +1185,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndFalseClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndFalseClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end
               should "redirect" do
                 get :action1, :id => 3
@@ -1201,11 +1195,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns false
           context "that returns zero" do
             setup do
-              class CatchResourceConflictWithModelAndZeroClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => :no_resources_left
+              class RedirectIfResourceUnavailableWithModelAndZeroClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => :no_resources_left)
+                end
               end
-              CatchResourceConflictWithModelAndZeroClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndZeroClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndZeroClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndZeroClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1215,7 +1211,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndZeroClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndZeroClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end
               should "redirect" do
                 get :action1, :id => 3
@@ -1225,11 +1221,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns 0          
           context "is true" do
             setup do
-              class CatchResourceConflictWithModelAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :model => Resource, :class_method => true
+              class RedirectIfResourceUnavailableWithModelAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :model => Resource, :class_method => true)
+                end
               end
-              CatchResourceConflictWithModelAndClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithModelAndClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithModelAndClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithModelAndClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1239,7 +1237,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithModelAndClassMethodTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithModelAndClassMethodTestsController.controller_name = "resource_with_custom_accessors"
               end
               should "redirect" do
                 get :action1, :id => 2
@@ -1251,11 +1249,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         end# class method
         context "with model as active record object" do
           setup do
-            class CatchResourceConflictWithModelARObjectTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :model => Resource.last
+            class RedirectIfResourceUnavailableWithModelARObjectTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :model => Resource.last)
+              end
             end
-            CatchResourceConflictWithModelARObjectTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithModelARObjectTestsController.new
+            RedirectIfResourceUnavailableWithModelARObjectTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithModelARObjectTestsController.new
 
             ActionController::Routing::Routes.draw {|map|
               map.connect "/:action", :controller => @controller.controller_path
@@ -1265,31 +1265,31 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithModelARObjectTestsController.controller_name = "resource_with_custom_accessors"
+              RedirectIfResourceUnavailableWithModelARObjectTestsController.controller_name = "resource_with_custom_accessors"
             end
-            context "without conflict" do
+            context "without available" do
               context "without resource parameter" do
                 should "not redirect" do
                   get :action1, :id => 3
                   assert_response :success
                 end
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :id => 2
                 assert_response :success
               end
 
-            end # context with conflict
+            end # context with unavailable
             context "alternate id key based on model name" do
-              context "without conflict" do
+              context "without available" do
                 should "not redirect" do
                   get :action1, :resource_id => 3
                   assert_response :success
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 should "redirect" do
                   get :action1, :resource_id => 2
                   assert_response :success
@@ -1300,11 +1300,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         end # model as activeRecord object
         context "with model as symbol" do
           setup do
-            class CatchResourceConflictWithModelSymbolTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :model => :resource
+            class RedirectIfResourceUnavailableWithModelSymbolTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :model => :resource)
+              end
             end
-            CatchResourceConflictWithModelSymbolTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithModelSymbolTestsController.new
+            RedirectIfResourceUnavailableWithModelSymbolTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithModelSymbolTestsController.new
 
             ActionController::Routing::Routes.draw {|map|
               map.connect "/:action", :controller => @controller.controller_path
@@ -1314,30 +1316,30 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithModelSymbolTestsController.controller_name = "resource_with_custom_accessors"
+              RedirectIfResourceUnavailableWithModelSymbolTestsController.controller_name = "resource_with_custom_accessors"
             end
-            context "without conflict" do
+            context "without available" do
               should "not redirect" do
                 get :action1, :id => 3
                 assert_response :success
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :id => 2
                 assert_redirected_to "/"
               end
 
-            end # context with conflict
+            end # context with unavailable
 
             context "alternate id key based on model name" do
-              context "without conflict" do
+              context "without available" do
                 should "not redirect" do
                   get :action1, :resource_id => 3
                   assert_response :success
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 should "redirect" do
                   get :action1, :resource_id => 2
                   assert_redirected_to "/"
@@ -1348,11 +1350,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         end # model as symbol
         context "with model as string" do
           setup do
-            class CatchResourceConflictWithModelStringTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts :model => "resource"
+            class RedirectIfResourceUnavailableWithModelStringTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable( :model => "resource")
+              end
             end
-            CatchResourceConflictWithModelStringTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithModelStringTestsController.new
+            RedirectIfResourceUnavailableWithModelStringTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithModelStringTestsController.new
 
             ActionController::Routing::Routes.draw {|map|
               map.connect "/:action", :controller => @controller.controller_path
@@ -1362,30 +1366,30 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithModelStringTestsController.controller_name = "resource_with_custom_accessors"
+              RedirectIfResourceUnavailableWithModelStringTestsController.controller_name = "resource_with_custom_accessors"
             end
-            context "without conflict" do
+            context "without available" do
               should "not redirect" do
                 get :action1, :id => 3
                 assert_response :success
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               should "redirect" do
                 get :action1, :id => 2
                 assert_redirected_to "/"
               end
 
-            end # context with conflict
+            end # context with unavailable
 
             context "alternate id key based on model name" do
-              context "without conflict" do
+              context "without available" do
                 should "not redirect" do
                   get :action1, :resource_id => 3
                   assert_response :success
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 should "redirect" do
                   get :action1, :resource_id => 2
                   assert_redirected_to "/"
@@ -1401,11 +1405,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         context "with class method" do
           context "with undefined class method" do
             setup do
-              class CatchResourceConflictWithUndefinedClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :class_method => :nothing
+              class RedirectIfResourceUnavailableWithUndefinedClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :class_method => :nothing)
+                end
               end
-              CatchResourceConflictWithUndefinedClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithUndefinedClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithUndefinedClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithUndefinedClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1415,7 +1421,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithUndefinedClassMethodTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithUndefinedClassMethodTestsController.controller_name = "resources"
               end
               should "Raise NoMethodError" do
                 assert_raise(NoMethodError) do
@@ -1426,11 +1432,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #undefined class method
           context "that returns true" do
             setup do
-              class CatchResourceConflictWithTrueClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts  :class_method => :returns_true
+              class RedirectIfResourceUnavailableWithTrueClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable(  :class_method => :returns_true)
+                end
               end
-              CatchResourceConflictWithTrueClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithTrueClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithTrueClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithTrueClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1440,7 +1448,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithTrueClassMethodTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithTrueClassMethodTestsController.controller_name = "resources"
               end
               should "not redirect" do
                 get :action1, :id => 2
@@ -1450,11 +1458,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns true
           context "that returns numeric" do
             setup do
-              class CatchResourceConflictWithTrueNumericClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :class_method => :resources_left
+              class RedirectIfResourceUnavailableWithTrueNumericClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :class_method => :resources_left)
+                end
               end
-              CatchResourceConflictWithTrueNumericClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithTrueNumericClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithTrueNumericClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithTrueNumericClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1464,7 +1474,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithTrueNumericClassMethodTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithTrueNumericClassMethodTestsController.controller_name = "resources"
               end
               should "not redirect" do
                 get :action1, :id => 2
@@ -1474,11 +1484,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns numeric
           context "that returns false" do
             setup do
-              class CatchResourceConflictWithFalseClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :class_method => :returns_false
+              class RedirectIfResourceUnavailableWithFalseClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :class_method => :returns_false)
+                end
               end
-              CatchResourceConflictWithFalseClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithFalseClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithFalseClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithFalseClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1488,7 +1500,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithFalseClassMethodTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithFalseClassMethodTestsController.controller_name = "resources"
               end
               should "redirect" do
                 get :action1, :id => 3
@@ -1498,11 +1510,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end #returns false
           context "that returns zero" do
             setup do
-              class CatchResourceConflictWithZeroClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :class_method => :no_resources_left
+              class RedirectIfResourceUnavailableWithZeroClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :class_method => :no_resources_left)
+                end
               end
-              CatchResourceConflictWithZeroClassMethodTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithZeroClassMethodTestsController.new
+              RedirectIfResourceUnavailableWithZeroClassMethodTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithZeroClassMethodTestsController.new
 
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
@@ -1512,7 +1526,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithZeroClassMethodTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithZeroClassMethodTestsController.controller_name = "resources"
               end
               should "redirect" do
                 get :action1, :id => 3
@@ -1525,17 +1539,22 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         context "with accessor" do
           context "with class method" do
             setup do
-              class CatchResourceConflictWithAccessorAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :accessor => :resources_left, :class_method => true
+              class RedirectIfResourceUnavailableWithAccessorAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :accessor => :resources_left, :class_method => true)
+                end
               end
-              @controller = CatchResourceConflictWithAccessorAndClassMethodTestsController.new
+
+              @controller = RedirectIfResourceUnavailableWithAccessorAndClassMethodTestsController.new
               ActionController::Routing::Routes.draw {|map|
                 map.connect "/:action", :controller => @controller.controller_path
                 map.connect "/:action/:id", :controller => @controller.controller_path
               }
             end
             context "instance that should redirect" do
+
               should "not redirect" do
+                RedirectIfResourceUnavailableWithAccessorAndClassMethodTestsController.controller_name = "resources"
                 get :action1, :id => 2
                 assert_response :success
               end
@@ -1544,11 +1563,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
           context "without id" do
             setup do
-              class CatchResourceConflictWithAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts  :accessor => :resources_left
+              class RedirectIfResourceUnavailableWithAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable(  :accessor => :resources_left)
+                end
               end
-              CatchResourceConflictWithAccessorTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithAccessorTestsController.new
+              RedirectIfResourceUnavailableWithAccessorTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithAccessorTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -1559,17 +1580,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithAccessorTestsController.controller_name = "resource_with_custom_accessors"
+                RedirectIfResourceUnavailableWithAccessorTestsController.controller_name = "resource_with_custom_accessors"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
                     get :action1, :id => 3
                     assert_response :success
                   end
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                   should "not redirect" do
 
@@ -1577,17 +1598,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                     assert_redirected_to "/"
                   end
                 end # context with resource unavailable
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
           end #context without id
           context "with id" do
             context "Non Existant resource" do
               setup do
-                class CatchResourceConflictWithAccessorAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :id => 4, :accessor=> :resources_left
+                class RedirectIfResourceUnavailableWithAccessorAndNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :id => 4, :accessor=> :resources_left)
+                  end
                 end
-                CatchResourceConflictWithAccessorAndNonExistantIdTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithAccessorAndNonExistantIdTestsController.new
+                RedirectIfResourceUnavailableWithAccessorAndNonExistantIdTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithAccessorAndNonExistantIdTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -1598,9 +1621,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithAccessorAndNonExistantIdTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithAccessorAndNonExistantIdTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
 
@@ -1609,8 +1632,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                     end
 
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "with resource should redirect" do
 
@@ -1620,16 +1643,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   end # context with resource unavailable
 
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #nonexistant resource
             context "Existing resource" do
               setup do
-                class CatchResourceConflictWithAccessorAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :id => 3, :accessor=> :resources_left
+                class RedirectIfResourceUnavailableWithAccessorAndExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :id => 3, :accessor=> :resources_left)
+                  end
                 end
-                CatchResourceConflictWithAccessorAndExistingIdTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithAccessorAndExistingIdTestsController.new
+                RedirectIfResourceUnavailableWithAccessorAndExistingIdTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithAccessorAndExistingIdTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -1640,9 +1665,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithAccessorAndExistingIdTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithAccessorAndExistingIdTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
 
@@ -1651,8 +1676,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                     end
 
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "with resource should redirect" do
 
@@ -1662,7 +1687,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                   end # context with resource unavailable
 
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #exisitng resource
           end #with id
@@ -1671,11 +1696,13 @@ class ConflictWarningsBasicTest < ActionController::TestCase
         context "with id" do
           context "Non Existant resource" do
             setup do
-              class CatchResourceConflictWithNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :id => 4
+              class RedirectIfResourceUnavailableWithNonExistantIdTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :id => 4)
+                end
               end
-              CatchResourceConflictWithNonExistantIdTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithNonExistantIdTestsController.new
+              RedirectIfResourceUnavailableWithNonExistantIdTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithNonExistantIdTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -1686,9 +1713,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithNonExistantIdTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithNonExistantIdTestsController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
 
@@ -1697,8 +1724,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   end
 
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                   should "with resource should redirect" do
 
@@ -1708,16 +1735,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                 end # context with resource unavailable
 
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
           end #nonexistant resource
           context "Existing resource" do
             setup do
-              class CatchResourceConflictWithExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
-                catch_resource_conflicts :id => 3
+              class RedirectIfResourceUnavailableWithExistingIdTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.redirect_if_resource_unavailable( :id => 3)
+                end
               end
-              CatchResourceConflictWithExistingIdTestsController.view_paths = ['...']
-              @controller = CatchResourceConflictWithExistingIdTestsController.new
+              RedirectIfResourceUnavailableWithExistingIdTestsController.view_paths = ['...']
+              @controller = RedirectIfResourceUnavailableWithExistingIdTestsController.new
 
 
               ActionController::Routing::Routes.draw {|map|
@@ -1728,9 +1757,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
             context "with basic resource" do
               setup do
-                CatchResourceConflictWithExistingIdTestsController.controller_name = "resources"
+                RedirectIfResourceUnavailableWithExistingIdTestsController.controller_name = "resources"
               end
-              context "without conflict" do
+              context "without available" do
                 context "without resource parameter" do
                   should "not redirect" do
 
@@ -1739,8 +1768,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   end
 
                 end
-              end #without conflict
-              context "with conflict" do
+              end #without available
+              context "with unavailable" do
                 context "with resource unavailable" do
                   should "with resource should redirect" do
 
@@ -1750,28 +1779,36 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
                 end # context with resource unavailable
 
-              end # context with conflict
+              end # context with unavailable
             end # context with basic resource
           end #exisitng resource
 
           context "with class method" do
-            should "raise Argument Error" do
-              assert_raise(ArgumentError) do
-                class CatchResourceConflictWithIdAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :id => 2, :class_method => true
+            setup do
+                class RedirectIfResourceUnavailableWithIdAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :id => 2, :class_method => true)
+                  end
                 end
+              @controller = RedirectIfResourceUnavailableWithIdAndClassMethodTestsController.new
               end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
               
             end
           end #with Class method
         end #with id
         context "with params id key" do
           setup do
-            class CatchResourceConflictWithParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts  :params_id_key => :name
+            class RedirectIfResourceUnavailableWithParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable(  :params_id_key => :name)
+              end
             end
-            CatchResourceConflictWithParamsIdKeyTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithParamsIdKeyTestsController.new
+            RedirectIfResourceUnavailableWithParamsIdKeyTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithParamsIdKeyTestsController.new
 
 
             ActionController::Routing::Routes.draw {|map|
@@ -1782,16 +1819,16 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithParamsIdKeyTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithParamsIdKeyTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
 
               should "redirect" do
                 get :action1, :id => 1, :name => 3
                 assert_response :success
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               context "with resource unavailable" do
                 context "without params_id_key parameter" do
                   should "not redirect" do
@@ -1810,16 +1847,18 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end # context with resource unavailable
 
-            end # context with conflict
+            end # context with unavailable
           end # context with basic resource
           context "with accessor" do
             context "without id" do
               setup do
-                class CatchResourceConflictWithParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :accessor => :resources_left, :params_id_key => :name
+                class RedirectIfResourceUnavailableWithParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :accessor => :resources_left, :params_id_key => :name)
+                  end
                 end
-                CatchResourceConflictWithParamsIdKeyAndAccessorTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithParamsIdKeyAndAccessorTestsController.new
+                RedirectIfResourceUnavailableWithParamsIdKeyAndAccessorTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithParamsIdKeyAndAccessorTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -1830,9 +1869,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithParamsIdKeyAndAccessorTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithParamsIdKeyAndAccessorTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "with resource parameter" do
                     should "redirect" do
 
@@ -1840,8 +1879,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                       assert_response :success
                     end
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "redirect" do
 
@@ -1849,47 +1888,67 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                       assert_redirected_to "/"
                     end
                   end # context with resource unavailable
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #context without id
             context "with id" do
-              should "raise error" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :id => 2, :accessor=> :resource, :params_id_key => :name
+              setup do
+                  class RedirectIfResourceUnavailableWithParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name)
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithParamsIdKeyAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end #with id
           end # with accessor
           context "without accessor" do
             context "with id" do
-              should "raise error" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts  :id => 2, :params_id_key => :name
+              setup do
+                  class RedirectIfResourceUnavailableWithParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable(  :id => 2, :params_id_key => :name)
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithParamsIdKeyAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end #with id
           end #without accessor
           context "with class method" do
-            should "raise Argument Error" do
-              assert_raise(ArgumentError) do
-                class CatchResourceConflictWithParamsIdKeyAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :params_id_key => :new_key, :class_method => true
+            setup do
+                class RedirectIfResourceUnavailableWithParamsIdKeyAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :params_id_key => :new_key, :class_method => true)
+                  end
                 end
+              @controller = RedirectIfResourceUnavailableWithParamsIdKeyAndClassMethodTestsController.new
               end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
             end
           end #with Class method
         end #with params id key
         context "with find options" do
           setup do
-            class CatchResourceConflictWithFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
-              catch_resource_conflicts  :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+            class RedirectIfResourceUnavailableWithFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
+              before_filter do |controller|
+                controller.redirect_if_resource_unavailable(  :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+              end
             end
-            CatchResourceConflictWithFindOptionsTestsController.view_paths = ['...']
-            @controller = CatchResourceConflictWithFindOptionsTestsController.new
+            RedirectIfResourceUnavailableWithFindOptionsTestsController.view_paths = ['...']
+            @controller = RedirectIfResourceUnavailableWithFindOptionsTestsController.new
 
             ActionController::Routing::Routes.draw {|map|
               map.connect "/:action", :controller => @controller.controller_path
@@ -1899,17 +1958,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
           end
           context "with basic resource" do
             setup do
-              CatchResourceConflictWithFindOptionsTestsController.controller_name = "resources"
+              RedirectIfResourceUnavailableWithFindOptionsTestsController.controller_name = "resources"
             end
-            context "without conflict" do
+            context "without available" do
               context "without resource parameter" do
                 should "not redirect" do
                   get :action1, :id => 1, :name => "Resources Available"
                   assert_response :success
                 end
               end
-            end #without conflict
-            context "with conflict" do
+            end #without available
+            context "with unavailable" do
               context "with resource unavailable" do
                 should "redirect" do
                   get :action1, {:id => 2,
@@ -1920,17 +1979,19 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               end # context with resource unavailable
 
-            end # context with conflict
+            end # context with unavailable
           end # context with basic resource
           context "with accessor" do
             context "without id" do
               setup do
-                class CatchResourceConflictWithFindOptionsAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :accessor => :resources_left,
-                    :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                class RedirectIfResourceUnavailableWithFindOptionsAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :accessor => :resources_left,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                  end
                 end
-                CatchResourceConflictWithFindOptionsAndAccessorTestsController.view_paths = ['...']
-                @controller = CatchResourceConflictWithFindOptionsAndAccessorTestsController.new
+                RedirectIfResourceUnavailableWithFindOptionsAndAccessorTestsController.view_paths = ['...']
+                @controller = RedirectIfResourceUnavailableWithFindOptionsAndAccessorTestsController.new
 
 
                 ActionController::Routing::Routes.draw {|map|
@@ -1941,17 +2002,17 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
               context "with basic resource" do
                 setup do
-                  CatchResourceConflictWithFindOptionsAndAccessorTestsController.controller_name = "resource_with_custom_accessors"
+                  RedirectIfResourceUnavailableWithFindOptionsAndAccessorTestsController.controller_name = "resource_with_custom_accessors"
                 end
-                context "without conflict" do
+                context "without available" do
                   context "without resource parameter" do
                     should "not redirect" do
                       get :action1, :id => 1, :name => "Resources Available"
                       assert_response :success
                     end
                   end
-                end #without conflict
-                context "with conflict" do
+                end #without available
+                context "with unavailable" do
                   context "with resource unavailable" do
                     should "not redirect" do
 
@@ -1960,96 +2021,144 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                       assert_redirected_to "/"
                     end
                   end # context with resource unavailable
-                end # context with conflict
+                end # context with unavailable
               end # context with basic resource
             end #context without id
             context "with id" do
-              should "raise ArgumentError" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :id => 2, :accessor=> :resource,
-                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup do
+                  class RedirectIfResourceUnavailableWithFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :id => 2, :accessor=> :resource,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithFindOptionsAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end #with id
           end # with accessor
           context "with id" do
             context "without accessor" do
-              should "Raise ArgumentError"do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts  :id => 2,
-                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup do
+                  class RedirectIfResourceUnavailableWithFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable(  :id => 2,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithFindOptionsAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end # without accessor
           end #with id
           context "with params id key" do
             context "without accessor" do
-              should "raise ArgumentError" do
-                assert_raise(ArgumentError) do
-                  class CatchResourceConflictWithFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-                    catch_resource_conflicts :params_id_key => :name,
-                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+              setup do
+                  class RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.redirect_if_resource_unavailable( :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                    end
                   end
+                @controller = RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
                 end
               end
             end # without accessor
             context "with accessor" do
               context "without id" do
-                should "raise ArgumentError"do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts  :accessor => :resource_left, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable(  :accessor => :resource_left, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAndAccessorTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
               end #context without id
               context "with id" do
-                should "raise ArgumentError" do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts :id => 2, :accessor=> :resource, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
               end #with id
             end # with accessor
             context "without accessor" do
               context "with id" do
-                should "raise ArgumentError" do
-                  assert_raise(ArgumentError) do
-                    class CatchResourceConflictWithFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      catch_resource_conflicts  :id => 2, :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}}
+                setup do
+                    class RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                      before_filter do |controller|
+                        controller.redirect_if_resource_unavailable(  :id => 2, :params_id_key => :name,
+                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
+                      end
                     end
-                  end
+                  @controller = RedirectIfResourceUnavailableWithFindOptionsAndParamsIdKeyAndIdTestsController.new
+              end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
                 end
 
               end #with id
             end  #without accessor
           end #with params id key
           context "with bad find options" do
-            should "raise error when find options is not a proc" do
-              assert_raise(ArgumentError) do
-                class CatchResourceConflictBadFindOptinsTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :find_options => {:conditions => {:name => "Test value"}}
+            setup do
+                class RedirectIfResourceUnavailableBadFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :find_options => {:conditions => {:name => "Test value"}})
+                  end
                 end
+            @controller = RedirectIfResourceUnavailableBadFindOptionsTestsController.new
               end
+              should "raise Argument Error when find options is not a proc" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
             end
           end
           context "with class method" do
-            should "raise Argument Error" do
-              assert_raise(ArgumentError) do
-                class CatchResourceConflictWithFindOptionsAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  catch_resource_conflicts :class_method => true,
-                    :find_options => Proc.new {{:conditions => {:id => 3}}}
+            setup do
+                class RedirectIfResourceUnavailableWithFindOptionsAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.redirect_if_resource_unavailable( :class_method => true,
+                      :find_options => Proc.new {{:conditions => {:id => 3}}})
+                  end
                 end
+              @controller = RedirectIfResourceUnavailableWithFindOptionsAndClassMethodTestsController.new
               end
+              should "raise Argument Error" do
+                assert_raise(ArgumentError) do
+                  get :action1, :id => 3
+                end
             end
           end #with Class method
         end # with find options
@@ -2058,24 +2167,26 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             
       context "template" do
         setup do
-          class CatchResourceConflictWithTemplateTestController < ::ConflictWarningsTest::ControllerStub
+          class RedirectIfResourceUnavailableWithTemplateTestController < ::ConflictWarningsTest::ControllerStub
             #include ::ConflictWarningsTest::ControllerBits
 
-            catch_resource_conflicts :template => "custom/custom"
+            before_filter do |controller|
+              controller.redirect_if_resource_unavailable( :template => "custom/custom")
+            end
             #cattr_accessor :controller_name
           end
-          @controller = CatchResourceConflictWithTemplateTestController.new
+          @controller = RedirectIfResourceUnavailableWithTemplateTestController.new
           ActionController::Routing::Routes.draw {|map|
             map.connect "/:action", :controller => @controller.controller_path
             map.connect "/:action/:id", :controller => @controller.controller_path
           }
-          CatchResourceConflictWithTemplateTestController.view_paths = ['...']
+          RedirectIfResourceUnavailableWithTemplateTestController.view_paths = ['...']
         end
         context "with basic resource" do
           setup do
-            CatchResourceConflictWithTemplateTestController.controller_name = "resources"
+            RedirectIfResourceUnavailableWithTemplateTestController.controller_name = "resources"
           end
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "raise argument error" do
                 assert_raise(ArgumentError) do
@@ -2091,7 +2202,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   assert_redirected_to "/"
                 end
               end
-              context "With resource available" do
+              context "With resource unavailable" do
                 should "not redirect" do
                   get :action1, :id => 3
                   assert_response :success
@@ -2100,7 +2211,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
 
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without template" do
                 should "redirect" do
@@ -2113,8 +2224,8 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
               context "with template" do
                 should "not redirect and render default template" do
-                  CatchResourceConflictWithTemplateTestController.append_view_path TestViewPath
-                  @controller = CatchResourceConflictWithTemplateTestController.new
+                  RedirectIfResourceUnavailableWithTemplateTestController.append_view_path TestViewPath
+                  @controller = RedirectIfResourceUnavailableWithTemplateTestController.new
                   get :action1, :id => 2
                   assert_response 409
                   assert_template("custom/custom_resource_unavailable")
@@ -2122,35 +2233,37 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end # context with template
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
         end # context with basic resource
       end #template
     end # context with options
     context "with block" do
       setup do
-        class CatchResourceConflictWithBlockTestController < ::ConflictWarningsTest::ControllerStub
-          catch_resource_conflicts do
-            respond_to do |format|
-              format.html {render :text => "Live from the block"}
-              format.js { render :update do |page|
-                  page << "alert('JS from the block')"
-                end
-              }
+        class RedirectIfResourceUnavailableWithBlockTestController < ::ConflictWarningsTest::ControllerStub
+          before_filter do |controller|
+            controller.redirect_if_resource_unavailable() do
+              respond_to do |format|
+                format.html {render :text => "Live from the block"}
+                format.js { render :update do |page|
+                    page << "alert('JS from the block')"
+                  end
+                }
+              end
             end
           end
         end
-        @controller = CatchResourceConflictWithBlockTestController.new
+        @controller = RedirectIfResourceUnavailableWithBlockTestController.new
         ActionController::Routing::Routes.draw {|map|
           map.connect "/:action", :controller => @controller.controller_path
           map.connect "/:action/:id", :controller => @controller.controller_path
         }
-        CatchResourceConflictWithBlockTestController.view_paths = ['...']
+        RedirectIfResourceUnavailableWithBlockTestController.view_paths = ['...']
 
-        CatchResourceConflictWithBlockTestController.controller_name = "resources"
+        RedirectIfResourceUnavailableWithBlockTestController.controller_name = "resources"
       end #setup
       context "accepts html" do
         context "with basic resource" do
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "raise argument error" do
                 assert_raise(ArgumentError) do
@@ -2166,7 +2279,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
                   assert_response :success
                 end
               end
-              context "With resource available" do
+              context "With resource unavailable" do
                 should "not redirect" do
                   get :action1, :id => 3
                   assert_response :success
@@ -2175,7 +2288,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
 
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without template" do
                 should "redirect" do
@@ -2188,12 +2301,12 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end # context without template
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
         end # context with basic resource
       end #accepts html
       context "accepts js" do
         context "with basic resource" do
-          context "without conflict" do
+          context "without available" do
             context "without resource parameter" do
               should "raise argument error" do
                 assert_raise(ArgumentError) do
@@ -2202,7 +2315,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
               end
             end
             context "with resource parameter" do
-              context "With resource available" do
+              context "With resource unavailable" do
                 should "not redirect" do
                   get :action1, :id => 3, :format => "js"
                   assert_response :success
@@ -2211,7 +2324,7 @@ class ConflictWarningsBasicTest < ActionController::TestCase
             end
           end
 
-          context "with conflict" do
+          context "with unavailable" do
             context "with resource unavailable" do
               context "without template" do
                 context "with resource unset avaliability" do
@@ -2232,9 +2345,9 @@ class ConflictWarningsBasicTest < ActionController::TestCase
 
             end # context with resource unavailable
 
-          end # context with conflict
+          end # context with unavailable
         end # context with basic resource
       end #accepts js
     end #with block
-  end #context catch resource conflicts
+  end #context catch resource unavailables
 end
