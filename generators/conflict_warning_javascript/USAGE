@@ -1,0 +1,10 @@
+Description:
+	The conflict warning javascript generator creates a javascript file containing common functions useful to the plugin. 
+
+Example:
+    ./script/generate conflict_warning_javascript
+
+    This will create public/javascript/conflict_warnings.js. 
+    Add the following line to your views to include the conflict warnings javascript helpers.
+
+     <%= javascript_include_tag "conflict_warnings" %>  

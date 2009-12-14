@@ -1,0 +1,11 @@
+empty:
+  id:   1
+  name:  Empty value
+unavailable:
+  id:   2
+  name: No Resources Remaining
+  resources_left: 0
+resources_available:
+  id: 3 
+  name: Resources Available
+  resources_left: 4
