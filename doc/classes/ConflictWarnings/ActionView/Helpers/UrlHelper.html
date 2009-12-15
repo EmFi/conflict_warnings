@@ -144,37 +144,37 @@ the
             onclick="toggleCode('M000005-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000005-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 19</span>
-19:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-20:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
-21:             <span class="ruby-identifier">options</span>      = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span> <span class="ruby-operator">||</span> {}
-22:             <span class="ruby-identifier">html_options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">second</span>
-23:             <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-24:               <span class="ruby-identifier">options</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
-25:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-26:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
-27:               <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>) =<span class="ruby-operator">&gt;</span>  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
-28:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-29:               <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_with_timestamp cannot be used with symbol targets such as :back&quot;</span>
-30:             <span class="ruby-keyword kw">end</span>
-31:               
-32:             <span class="ruby-identifier">concat</span>(<span class="ruby-identifier">link_to</span>(<span class="ruby-identifier">capture</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>), <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>))
-33:           <span class="ruby-keyword kw">else</span>
-34:               
-35:             <span class="ruby-identifier">name</span>         = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>
-36:             <span class="ruby-identifier">options</span>      = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">second</span> <span class="ruby-operator">||</span> {}
-37:             <span class="ruby-identifier">html_options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">third</span>
-38:             <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-39:               <span class="ruby-identifier">options</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
-40:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-41:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
-42:               <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>) =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
-43:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
-44:               <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_with_timestamp cannot be used with symbol targets such as :back&quot;</span>
-45:             <span class="ruby-keyword kw">end</span>
-46:             <span class="ruby-identifier">link_to</span>(<span class="ruby-identifier">name</span>,<span class="ruby-identifier">options</span>,<span class="ruby-identifier">html_options</span>)
-47:           <span class="ruby-keyword kw">end</span>
-48:         <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 61</span>
+61:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+62:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
+63:             <span class="ruby-identifier">options</span>      = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span> <span class="ruby-operator">||</span> {}
+64:             <span class="ruby-identifier">html_options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">second</span>
+65:             <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+66:               <span class="ruby-identifier">options</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
+67:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+68:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
+69:               <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>) =<span class="ruby-operator">&gt;</span>  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
+70:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+71:               <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_with_timestamp cannot be used with symbol targets such as :back&quot;</span>
+72:             <span class="ruby-keyword kw">end</span>
+73:               
+74:             <span class="ruby-identifier">concat</span>(<span class="ruby-identifier">link_to</span>(<span class="ruby-identifier">capture</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>), <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>))
+75:           <span class="ruby-keyword kw">else</span>
+76:               
+77:             <span class="ruby-identifier">name</span>         = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">first</span>
+78:             <span class="ruby-identifier">options</span>      = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">second</span> <span class="ruby-operator">||</span> {}
+79:             <span class="ruby-identifier">html_options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">third</span>
+80:             <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+81:               <span class="ruby-identifier">options</span> <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>.<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
+82:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+83:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
+84:               <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>) =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
+85:             <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+86:               <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_with_timestamp cannot be used with symbol targets such as :back&quot;</span>
+87:             <span class="ruby-keyword kw">end</span>
+88:             <span class="ruby-identifier">link_to</span>(<span class="ruby-identifier">name</span>,<span class="ruby-identifier">options</span>,<span class="ruby-identifier">html_options</span>)
+89:           <span class="ruby-keyword kw">end</span>
+90:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
@@ -201,10 +201,10 @@ to the
             onclick="toggleCode('M000006-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000006-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 53</span>
-53:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp_if</span>(<span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">html_options</span> = {}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-54:           <span class="ruby-identifier">link_to_with_timestamp_unless</span>(<span class="ruby-operator">!</span><span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span> , <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-55:         <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 95</span>
+95:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp_if</span>(<span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">html_options</span> = {}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+96:           <span class="ruby-identifier">link_to_with_timestamp_unless</span>(<span class="ruby-operator">!</span><span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span> , <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+97:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
@@ -231,18 +231,18 @@ paramater to the
             onclick="toggleCode('M000007-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000007-source">
 <pre>
-    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 60</span>
-60:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp_unless</span>(<span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">html_options</span> = {}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-61:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">condition</span>
-62:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
-63:               <span class="ruby-identifier">block</span>.<span class="ruby-identifier">arity</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-value">1</span> <span class="ruby-operator">?</span> <span class="ruby-keyword kw">yield</span>(<span class="ruby-identifier">name</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">yield</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
-64:             <span class="ruby-keyword kw">else</span>
-65:               <span class="ruby-identifier">name</span>
-66:             <span class="ruby-keyword kw">end</span>
-67:           <span class="ruby-keyword kw">else</span>
-68:             <span class="ruby-identifier">link_to_with_timestamp</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
-69:           <span class="ruby-keyword kw">end</span>
-70:         <span class="ruby-keyword kw">end</span>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 102</span>
+102:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_with_timestamp_unless</span>(<span class="ruby-identifier">condition</span>, <span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">html_options</span> = {}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+103:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">condition</span>
+104:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
+105:               <span class="ruby-identifier">block</span>.<span class="ruby-identifier">arity</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-value">1</span> <span class="ruby-operator">?</span> <span class="ruby-keyword kw">yield</span>(<span class="ruby-identifier">name</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">yield</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
+106:             <span class="ruby-keyword kw">else</span>
+107:               <span class="ruby-identifier">name</span>
+108:             <span class="ruby-keyword kw">end</span>
+109:           <span class="ruby-keyword kw">else</span>
+110:             <span class="ruby-identifier">link_to_with_timestamp</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
+111:           <span class="ruby-keyword kw">end</span>
+112:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>

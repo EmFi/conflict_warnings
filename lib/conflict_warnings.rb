@@ -1,6 +1,48 @@
 module ConflictWarnings #:nodoc:
   module ActionView #:nodoc:
     module Helpers #:nodoc:
+
+      # +conflict_warnings+ provides a form tag helper that add the a rendered at time
+      # to your form's parameters for use with
+      # ConflictWarnings::ActionController::Base::ClassMethods#filter_conflicts and
+      # ConflictWarnings::ActionController::Base::ClassMethods#catch_conflicts
+      module FormTagHelper
+        # Adds a timestamp with the given parameter name.
+        # Usage:
+        #     <%= timestamp_tag %>
+        # produces
+        #    <input id=\"page_rendered_at\" name=\"page_rendered_at\" type=\"hidden\" value=\"#{Time.now.to_i}\" />
+        def timestamp_tag(name = 'page_rendered_at')
+          hidden_field_tag name, Time.now.to_i
+        end
+      end
+      # +conflict_warnings+ provides a form helper that add the a rendered at time
+      # to your form's parameters for use with
+      # ConflictWarnings::ActionController::Base::ClassMethods#filter_conflicts and
+      # ConflictWarnings::ActionController::Base::ClassMethods#catch_conflicts
+      module FormHelper
+        # Adds a timestamp with the given parameter name.
+        # Usage:
+        #       f.timestamp :timestamp
+        #
+        # produces:        
+        #     <input id=\"timestamp\" name=\"timestamp\" type=\"hidden\" value=\"#{Time.now.to_i}\" />
+        #
+        # N.B. this is really just an alias for
+        # ConflictWarnings::ActionView::Helpers::FormTag:Helper#timestamp_tag
+        # created so that you could use the timestamp in a form_for block
+        def timestamp(object_name, name= 'page_rendered_at')
+          hidden_field_tag name, Time.now.to_i
+        end
+      end
+      
+      module FormBuilder #:nodoc:
+        def timestamp(name = 'page_rendered_at')
+          @template.timestamp(@object_name, name)
+        end
+      end
+
+
       # conflict_warnings provides some handy link_to wrappers that provide
       # a timestamp parameter for use with +catch_conflicts+ or +filter_conflicts+.
       #
