@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>File: README</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+  <div id="fileHeader">
+    <h1>README</h1>
+    <table class="header-table">
+    <tr class="top-aligned-row">
+      <td><strong>Path:</strong></td>
+      <td>README
+      </td>
+    </tr>
+    <tr class="top-aligned-row">
+      <td><strong>Last Update:</strong></td>
+      <td>Tue Dec 15 02:52:38 -0500 2009</td>
+    </tr>
+    </table>
+  </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <h1>Conflict_Warnings</h1>
+<p>
+conflict_warnings is an ActionController extension that provides methods of
+preventing data inconsistencies that could arise from multiple users
+interacting with the same resource at roughly the same time. Named after
+the <b>HTTP 409 Conflict</b> status, conflict_warnings determines if a
+database conflict is likely and intercepts potentailly dangerous requests.
+</p>
+<h1>Installation</h1>
+<p>
+From the root of your rails project run the following command:
+</p>
+<p>
+<tt>./script/plugin install
+git://github.com/EmFi/conflict_warnings.git</tt>
+</p>
+<h1>Usage</h1>
+<p>
+Add either <tt>filter_conflicts</tt> or <tt>filter_resource_conflicts</tt>
+to your controllers as if they were a before filter.
+</p>
+<pre>
+    class ExamplesController &lt; ApplicationController
+      filter_conflicts
+    end
+</pre>
+<p>
+or
+</p>
+<pre>
+    class ExamplesController &lt; ApplicationController
+      filter_resources_conflicts :only =&gt; :update
+    end
+</pre>
+<p>
+The underlying methods are also provided for use in your own filters, as
+<tt>catch_conflict</tt> and <tt>catch_resource_conflict</tt>.
+</p>
+<pre>
+    class CustomFilterExampleController &lt; ApplicationController
+      before_filter :check_lock
+
+      protected
+      def check_lock
+        unless catch_resources_unavailable :accessor =&gt; :unlocked
+          acquire_lock
+        end
+      end
+    end
+</pre>
+<p>
+The ConflictWarnings methods will use the options supplied and the params
+to select a model in the database and apply an accessor to identify problem
+requests.
+</p>
+<p>
+By default the model associated with the controller handling the request is
+used, will be used to find the instance with an id of params[:id].
+</p>
+<p>
+<tt>filter_conflicts</tt> and <tt>catch_conflicts</tt> compare a timestamp
+passed in the link against the updated_at column of the instance. Helpers
+are provided for creating links with this timestamp. If the model was
+modified after the timestamp, the request interrupted.
+</p>
+<p>
+<tt>filter_resources_unavialable</tt> and <tt>catch_conflicts</tt> will
+check for an instance method that ends with <tt>available</tt>. If this
+method returns 0 or a false value, the request is interrupted.
+</p>
+<p>
+Without any options interrupted requests redirect to the referring request,
+essentially reloading the page and any changes.
+</p>
+<h1>Documenation</h1>
+<p>
+This plugin comes with generated documentation for its provided methods and
+classes in the doc folder.
+</p>
+<p>
+In depth documentation of <tt>filter_conflicts</tt> and
+<tt>filter_resources_unavailable</tt> can be found in
++ConflictWarnings::ActionController::ClassMethods+. While documentation of
+<tt>catch_conflicts</tt> and <tt>catch_resources_unavaialble</tt> can be
+found in +ConflictWarnigns::ActionController::InstanceMethods+.
+</p>
+<p>
+<tt>conflict_warnings</tt> also provides some view helpers, for adding
+parameters <tt>catch_conflicts</tt> require to links. They can be found in
+<tt><a
+href="../classes/ConflictWarnings/ActionView/Helpers/UrlHelper.html">ConflictWarnings::ActionView::Helpers::UrlHelper</a></tt>
+and <tt><a
+href="../classes/ConflictWarnings/ActionView/Helpers/PrototypeHelper.html">ConflictWarnings::ActionView::Helpers::PrototypeHelper</a></tt>
+</p>
+<h1>Caveats</h1>
+<p>
+If <tt>catch_conflicts</tt>, <tt>catch_resource_conflict</tt>,
+<tt>filter_conflicts</tt> and <tt>filter_resource_conflicts</tt> not
+receive enough information to reach a decision it will usually assumes the
+action is harmful. Records that produce a nil value to compare the time the
+requesting page was rendered will be allowed to complete successfully.
+</p>
+<p>
+ActionView::Helpers:
+</p>
+<h6>==</h6>
+<p>
+link_to_with_timestamp
+</p>
+
+    </div>
+
+
+   </div>
+
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Module: ConflictWarnings::ActionView::Helpers::PrototypeHelper</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href="../../../.././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Module</strong></td>
+          <td class="class-name-in-header">ConflictWarnings::ActionView::Helpers::PrototypeHelper</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../../../../files/lib/conflict_warnings_rb.html">
+                lib/conflict_warnings.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+conflict_warnings provides some handy link_to_remote wrappers that provide
+a timestamp parameter for use with <tt>catch_conflicts</tt> or
+<tt>filter_conflicts</tt>.
+</p>
+<p>
+The all take the same options as their basic link_to_remote equivalents
+</p>
+<p>
+If options are provided as a string then page_rendered_at=Time.now.to_i is
+appended to the link.
+</p>
+<p>
+Otherwise the params key used for the timestamp can be changed by providing
+the :timestamp_key option to as part of the url hash.
+</p>
+
+    </div>
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000008">link_to_remote_with_timestamp</a>&nbsp;&nbsp;
+      <a href="#M000009">link_to_remote_with_timestamp_and_fallback</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
+
+        <div class="method-heading">
+          <a href="#M000008" class="method-signature">
+          <span class="method-name">link_to_remote_with_timestamp</span><span class="method-args">(name,options ={},html_options = nil)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Wrapper for link_to remote that adds a page_rendered_at=Time.now parameter
+to the target url.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000008-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000008-source">
+<pre>
+    <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 89</span>
+89:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_remote_with_timestamp</span>(<span class="ruby-identifier">name</span>,<span class="ruby-identifier">options</span> ={},<span class="ruby-identifier">html_options</span> = <span class="ruby-keyword kw">nil</span>)
+90:           <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-keyword kw">then</span>
+91:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>].<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
+92:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-keyword kw">then</span>
+93:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
+94:             <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>)=<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
+95:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+96:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_remote_with_timestamp cannot be used with symbol targets such as :back&quot;</span>
+97:           <span class="ruby-keyword kw">end</span>
+98:           <span class="ruby-identifier">link_to_remote</span>(<span class="ruby-identifier">name</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
+99:         <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000009" class="method-detail">
+        <a name="M000009"></a>
+
+        <div class="method-heading">
+          <a href="#M000009" class="method-signature">
+          <span class="method-name">link_to_remote_with_timestamp_and_fallback</span><span class="method-args">(link, options = {}, html_options = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Wrapper for <a
+href="PrototypeHelper.html#M000008">link_to_remote_with_timestamp</a> that
+sets the html_options argument to link_to_with_timestamp. Allowing for AJAX
+conflict warnings that successfully fall back go html requests.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000009-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000009-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 104</span>
+104:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">link_to_remote_with_timestamp_and_fallback</span>(<span class="ruby-identifier">link</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">html_options</span> = {})
+105:           <span class="ruby-keyword kw">if</span> <span class="ruby-constant">String</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-keyword kw">then</span>
+106:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-operator">&lt;&lt;</span> (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>].<span class="ruby-identifier">match</span>(<span class="ruby-regexp re">/\?/</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;&amp;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;?&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-node">&quot;page_rendered_at=#{Time.now.to_i}&quot;</span>
+107:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Hash</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>] <span class="ruby-keyword kw">then</span>
+108:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||=</span> <span class="ruby-identifier">:page_rendered_at</span>
+109:             <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge!</span>({<span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:timestamp_key</span>) =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_i</span>})
+110:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-constant">Symbol</span> <span class="ruby-operator">===</span> <span class="ruby-identifier">options</span> <span class="ruby-keyword kw">then</span>
+111:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;link_to_remote_with_timestamp_and_fallback cannot be used with symbol targets such as :back&quot;</span>
+112:           <span class="ruby-keyword kw">end</span>
+113:           <span class="ruby-identifier">html_options</span>[<span class="ruby-identifier">:href</span>] = <span class="ruby-identifier">url_for</span>(<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:url</span>])
+114:           <span class="ruby-identifier">link_to_remote_with_timestamp</span>(<span class="ruby-identifier">link</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">html_options</span>)
+115:         <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

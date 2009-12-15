@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Module: ConflictWarnings::ActionController::Base::ClassMethods</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href="../../../.././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Module</strong></td>
+          <td class="class-name-in-header">ConflictWarnings::ActionController::Base::ClassMethods</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../../../../files/lib/conflict_warnings_rb.html">
+                lib/conflict_warnings.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+Conflict Warnings introduces two approaches to identify situations that
+could result in inconsistent data.
+</p>
+<p>
+<tt><a href="ClassMethods.html#M000001">filter_conflicts</a></tt> and
+<tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt>
+identify problem cases based on their arguments, the parameters of the
+current requests allowing you to display relevant errors and warnings
+and/or more importantly update information.
+</p>
+<p>
+<tt><a href="ClassMethods.html#M000001">filter_conflicts</a></tt> and
+<tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt> use
+timestamps and resources respectively to identify problem requests.
+</p>
+<p>
+In either case, conflict_warnings will make reasonable guesses when options
+are omitted.
+</p>
+<p>
+For requests accepting html, the default action in the event of a conflict
+is to <tt>redirect_to :back</tt>, reloading the referring page, and adding
+the default warning message to <tt>flash[:warning]</tt>. For :js format
+requests, the page is reloaded and an alert box displays the default
+message. Currently conflict_warnings filter methods do not have default
+actions for other formats. However, any block given to <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt> or <tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt> will
+be executed in the event of a problem request.
+</p>
+<p>
+If a request is identified as problematic, the status of the response is
+409 Conflict, unless the supplied block states otherwise, or a template was
+not found in a HTTP request. Some browsers will not follow a redirection
+who&#8216;s status is not 302 Redirected.
+</p>
+<h2>Common Options for filters</h2>
+<dl>
+<dt><tt>:model</tt></dt><dd>ActiveRecord model that will be used to determine if there is a conflict.
+Default value is derived from the current controller name. Can be a
+provided, as a string, symbol, constant, or instance of ActiveRecord::Base.
+If a record is supplied this option cannot be used with <tt>:id,
+:params_id_key,</tt> or<tt> :find_options.</tt>
+
+</dd>
+<dt><tt>:id</tt></dt><dd>Record id used to determine if there is a conflict. Default value is
+<tt>params[&quot;#{model)_id&quot;]</tt> if it extsts, with
+<tt>params[:id]</tt> as a fallback. Cannot be used with <tt>:params_id_key,
+:find_options</tt>, or <tt>:model</tt> if the <tt>:model</tt> option is an
+instance of an ActiveRecord::Base descendent.
+
+</dd>
+<dt><tt>:params_id_key</tt></dt><dd>Parameter hash key linking to the id to be used in selecting an record to
+generate timestamp or resource availability information used to identify
+problem requests. Cannot be used with <tt>:id, :find_options</tt>, or
+<tt>:model</tt> if the <tt>:model</tt> option is an instance of an
+ActiveRecord::Base descendent.
+
+</dd>
+<dt><tt>:find_options</tt></dt><dd>Proc that evailuates to options passed to find(:first) to be used in
+selecting an record to generate timestamp or resource availability
+information used to identify problem requests. This needs to be a Proc
+because the scope <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt> <tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt> will
+be called in does not have access to the parameter hash. Ensure that the
+proc returns a hash. Cannot be used with <tt>:id, :params_id_key</tt>, or
+<tt>:model</tt> if the <tt>:model</tt> option is an instance of an
+ActiveRecord::Base descendent.
+
+</dd>
+<dt><tt>:accessor</tt></dt><dd>Method sent to the selected record that returns the timestamp or
+availability information used to identify problem requests. In
+catch_conflicts the default is updated_at or updated_on, if such a column
+exists. In catch_resource_conflicts the default is the first column with a
+name matching /available/.
+
+</dd>
+<dt><tt>:template</tt></dt><dd>Template file to render in event of a conflict. For catch_conflicts, the
+default value is &quot;#{controller_name}/#{action_name}_conflict&quot;.
+For catch_resource_conflicts, the default value is
+&quot;#{controller_name}/#{action_name}_resource_unavailable&quot;. When a
+conflict is identified on search for a html.erb, .rhtml, or .rjs file
+depending on the request. If one isn&#8216;t found the default action is
+taken.
+
+</dd>
+<dt><tt>:message</tt></dt><dd>Message added to the flash hash. The catch_conflicts default value is
+&quot;Your request will not be processed becasue the data you were viewing
+is out of date. The page has been refreshed. Please try again.&quot; The
+catch_resource_conflicts default value is &quot;Your request will not be
+processed because the resource you require is no longer available.&quot;
+
+</dd>
+<dt><tt>:flash_key</tt></dt><dd>The flash hash key to store the message in. Default value is
+<tt>:warning</tt>
+
+</dd>
+<dt><tt>:except, :only</tt></dt><dd>Arguments to be passed to the underlying before_filter call
+
+</dd>
+<dt><tt>&amp;block</tt></dt><dd>This block is evaulated when a problem request is identified If no block is
+provided, the default action as described above is taken.
+
+</dd>
+</dl>
+
+    </div>
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000001">filter_conflicts</a>&nbsp;&nbsp;
+      <a href="#M000002">filter_resources_unavailable</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000001" class="method-detail">
+        <a name="M000001"></a>
+
+        <div class="method-heading">
+          <a href="#M000001" class="method-signature">
+          <span class="method-name">filter_conflicts</span><span class="method-args">(options = {},&amp;block)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Filters requests by comparing a timestamp embedded in the parameters hash
+against a record. See common options, to understand how <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt> acquires a
+timestamp from a record.
+</p>
+<p>
+Using timestamps to catch conflicts is a two step process.
+</p>
+<p>
+Step one: Embed a timestamp paramaters in potentially dangerous links. This
+is easist done with the link_to_with_timestamp helper from your views. See
+<tt><a
+href="../../ActionView/Helpers/UrlHelper.html">ConflictWarnings::ActionView::Helpers::UrlHelper</a></tt>
+and <tt>Conflict::Warnings::ActionView::Helpers::PrototypeHelper</tt> for a
+list of provided helpers and their uses. <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt> is expecting the
+timestamp as an integer in seconds since the UNIX Epoch
+</p>
+<p>
+Step two: Catch undesireable timestamps using <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt>. The options
+given are used to find a timestamp to compare against the timestamp of the
+referring page. The most common uses of <tt><a
+href="ClassMethods.html#M000001">filter_conflicts</a></tt> compare the time
+at which the referrant was rendered against the updated_at field on the
+record to be changed. If the timestamp provided in the parameters is
+deteremined to be invalid the request is interrupted.
+</p>
+<p>
+<tt><a href="ClassMethods.html#M000001">filter_conflicts</a></tt> accepts
+three additional options to the ones described above.
+</p>
+<dl>
+<dt><tt>:simulate_conflicts_on_requests_before</tt></dt><dd>Instead of using a record to select a timestamp for determine conflicts,
+use the provide timestamp. Can be used to shut off portions of your
+application at a given time. Accepts any Date,DateTime or Time object.
+Cannot be used with <tt>:id, :params_id_key, :find_options</tt>, or
+<tt>:model</tt> if the <tt>:model</tt> option is an instance of an
+ActiveRecord::Base descendent.
+
+</dd>
+<dt><tt>:simulate_conflicts_on_requests_after</tt></dt><dd>Instead of using a record to select a timestamp for determine conflicts,
+use the provide timestamp. Can be used to active portions of your
+application at a given time. Accepts any Date,DateTime or Time object.
+Cannot be used with <tt>:id, :params_id_key, :find_options</tt>, or
+<tt>:model</tt> if the <tt>:model</tt> option is an instance of an
+ActiveRecord::Base descendent.
+
+</dd>
+<dt><tt>:timestamp_key</tt></dt><dd>Parameter hash key containing the time the referring page was rendered. The
+value of <tt>params[options[:timestamp_key]</tt> is compared against the
+last modified time of the record selected to identify conflicts. If there
+is no parameter hash key matching the value of
+<tt>options[:timestamp_key]</tt> the requests is considered to be
+inconflict. Default value is <tt>:page_rendered_at</tt>
+
+</dd>
+</dl>
+<h5>Example</h5>
+<p>
+Given these rows in the MultiAccessResources table,
+</p>
+<pre>
+    +--+----------+-------+----------------------+
+    |id|project_id| value |  updated_at          |
+    +--+----------+-------+----------------------+
+    | 1|   17     | 1123  |  Jan 1 12:00:45 2009 |
+    | 2|   23     | 5422  |  Dec 1 23:43:45 2009 |
+    | 3|   52     | 52312 |       NULL           |
+    +--+----------+-------+----------------------+
+</pre>
+<p>
+and this call to <a href="ClassMethods.html#M000001">filter_conflicts</a>,
+</p>
+<pre>
+   class MultiAccessResourceController &lt; ApplicationController
+     filter_conflicts  :only =&gt; :update, :find_options =&gt; lambda {{:conditions =&gt; [&quot;project_id = ?&quot;, params[:proj_id]]}}
+   end
+</pre>
+<p>
+this will be interrupted:
+</p>
+<ul>
+<li>put: :project_id =&gt; 17, :action =&gt; :update, :page_rendered_at =&gt;
+1253005253 (September 15 2009)
+
+</li>
+<li>put: :project_id =&gt; 52, :action =&gt; :update
+
+</li>
+</ul>
+<p>
+these requests will not be:
+</p>
+<ul>
+<li>post: :project_id =&gt; 42, :action =&gt; :create, :page_rendered_at =&gt;
+1253005253 (September 15 2009)
+
+</li>
+<li>put: :project_id =&gt; 52, :action =&gt; :update, :page_rendered_at =&gt;
+1253005253 (September 15 2009)
+
+</li>
+<li>put: :project_id =&gt; 17, :action =&gt; :update, :page_rendered_at =&gt;
+1253005253 (September 15 2009)
+
+</li>
+<li>get: :id =&gt; 1, :action =&gt; :show
+
+</li>
+</ul>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000001-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000001-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 319</span>
+319:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_conflicts</span>(<span class="ruby-identifier">options</span> = {},<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+320:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterConflicts</span>)
+321:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
+322:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+323:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>          
+324:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
+325:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_conflicts</span>(<span class="ruby-identifier">options</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+326:           <span class="ruby-keyword kw">end</span>
+327:         <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000002" class="method-detail">
+        <a name="M000002"></a>
+
+        <div class="method-heading">
+          <a href="#M000002" class="method-signature">
+          <span class="method-name">filter_resources_unavailable</span><span class="method-args">(options = {},&amp;block)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Filters requests by checking a record or model for availability See common
+options, to understand how <tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt>
+selects a record or model and determins availability.
+</p>
+<p>
+Without any arguments, the model, id, and accessor are used to select the
+resource. Unless options dictate otherwise, the model, is taken from the
+controller name, id is from the params[:id] field, and accessor is the
+first field containing the name &quot;available&quot; on the instance of
+the model with the given id.
+</p>
+<p>
+If accessor returns 0, or a false value the request is interrupted. If a
+record cannot be found with the given options, then the request will
+proceed without triggering the conflict action.
+</p>
+<p>
+See the common options for other ways of specifying the deadline.
+</p>
+<p>
+The request is interrupted if the accessor returning false, or an numeric
+value less than or equal to 0.
+</p>
+<p>
+In addition to the common options listed above, <tt><a
+href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt> also
+accepts the following option:
+</p>
+<dl>
+<dt><tt>:class_method</tt></dt><dd>Default is nil. If true, accessor is treated as a class method instead of
+an instance method. If a symbol or string is provided, the accessor is
+ignored.
+
+</dd>
+</dl>
+<h4>Example</h4>
+<p>
+Given these rows in the events table,
+</p>
+<pre>
+    +--+------------+
+    |id|tickets_left|
+    +--+------------+
+    | 1|   17       |
+    | 2|    0       |
+    | 3|   NULL     |
+    +--+------------+
+
+    class OrdersController &lt; ApplicatoinController
+     filter_resources_unavaliable :only =&gt; :create, :model =&gt; Event,
+        :accessor =&gt; :tickets_left
+      end
+    end
+</pre>
+<p>
+The following requests will be interrupted:
+</p>
+<p>
+post: :action =&gt; :create, :event_id =&gt; 2 post: :action =&gt; :create,
+:event_id =&gt; 3 post: :action =&gt; :create, :event_id =&gt; 4
+</p>
+<p>
+The following requests will not be interrupted:
+</p>
+<p>
+post :action =&gt; :create, :event_id =&gt; 1
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000002-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000002-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 386</span>
+386:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_resources_unavailable</span>(<span class="ruby-identifier">options</span> = {},<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+387:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterResourcesUnavailable</span>)
+388:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
+389:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+390:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+391:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
+392:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_resources_unavailable</span>(<span class="ruby-identifier">options</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+393:           <span class="ruby-keyword kw">end</span>
+394:         <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>
