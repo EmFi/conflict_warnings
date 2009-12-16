@@ -14,6 +14,8 @@ From the root of your rails project run the following command:
 
 = Usage
 
+== filters
+
 Add either +filter_conflicts+ or +filter_resource_conflicts+ to your controllers
 as if they were a before filter.
 
@@ -27,6 +29,7 @@ or
       filter_resources_conflicts :only => :update
     end
 
+== Controller Instance Methods
 The underlying methods are also provided for use in your own filters, as
 +catch_conflict+ and +catch_resource_conflict+.
 
@@ -59,20 +62,43 @@ is interrupted.
 Without any options interrupted requests redirect to the referring request, essentially
 reloading the page and any changes.
 
+== Helpers
++conflict_warnings+ provides view helpers that add parameters
++catch_conflicts+ require to links:
+
+    <%= link_to_remote_with_timestamp("Confirm", confirm_event_url(@event) %>
+
+And forms:
+
+    <%= f.timestamp %>
+or
+    <%= timestamp_tag %>
+
+
+== Javascript
++conflict_warnings+ provides a javascript function for use in your RJS templates
+to update timestamps in regions of a page that are not updated as by an interrupted AJAX request.
+
+    page.call('replaceTimeStamps', params[:page_rendered_at], Time.now.to_i)
+
+
 = Documenation
 
 This plugin comes with generated documentation for its provided methods and classes
 in the doc folder.
 
 In depth documentation of +filter_conflicts+ and +filter_resources_unavailable+ can
-be found in +ConflictWarnings::ActionController::ClassMethods+. While documentation of
+be found in ConflictWarnings::ActionController::ClassMethods#. While documentation of
 +catch_conflicts+ and +catch_resources_unavaialble+ can be found in
-+ConflictWarnigns::ActionController::InstanceMethods+.
+ConflictWarnigns::ActionController::InstanceMethods#.
 
-+conflict_warnings+ also provides some view helpers, for adding parameters
++conflict_warnings+ provides view helpers that add parameters
 +catch_conflicts+ require to links. They can be found in
-<tt>ConflictWarnings::ActionView::Helpers::UrlHelper</tt>
-and <tt>ConflictWarnings::ActionView::Helpers::PrototypeHelper</tt>
+<tt>ConflictWarnings::ActionView::Helpers::UrlHelper</tt>,
+<tt>ConflictWarnings::ActionView::Helpers::PrototypeHelper</tt>,
+<tt>ConflictWarnings::ActionView::Helpers::FormHelper</tt>, and
+<tt>ConflictWarnings::ActionView::Helpers::FormTagHelper</tt>
+
 
 = Caveats
 
@@ -84,13 +110,8 @@ to complete successfully.
 
 
 
-
-
-
-
-Things To Do:
-===========
-*Handle additional formats beyond html and js
+= Things To Do:
+ * Handle additional formats beyond html and js
 
 
 Copyright (c) 2009 Emery Finkelstein, released under the MIT license

@@ -5,7 +5,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>File: README</title>
+  <title>File: README.rdoc</title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <meta http-equiv="Content-Script-Type" content="text/javascript" />
   <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
@@ -47,16 +47,16 @@
 
 
   <div id="fileHeader">
-    <h1>README</h1>
+    <h1>README.rdoc</h1>
     <table class="header-table">
     <tr class="top-aligned-row">
       <td><strong>Path:</strong></td>
-      <td>README
+      <td>README.rdoc
       </td>
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Tue Dec 15 06:01:07 -0500 2009</td>
+      <td>Tue Dec 15 23:28:54 -0500 2009</td>
     </tr>
     </table>
   </div>
@@ -86,6 +86,7 @@ From the root of your rails project run the following command:
 git://github.com/EmFi/conflict_warnings.git</tt>
 </p>
 <h1>Usage</h1>
+<h2>filters</h2>
 <p>
 Add either <tt>filter_conflicts</tt> or <tt>filter_resource_conflicts</tt>
 to your controllers as if they were a before filter.
@@ -103,6 +104,7 @@ or
       filter_resources_conflicts :only =&gt; :update
     end
 </pre>
+<h2>Controller Instance Methods</h2>
 <p>
 The underlying methods are also provided for use in your own filters, as
 <tt>catch_conflict</tt> and <tt>catch_resource_conflict</tt>.
@@ -143,6 +145,35 @@ method returns 0 or a false value, the request is interrupted.
 Without any options interrupted requests redirect to the referring request,
 essentially reloading the page and any changes.
 </p>
+<h2>Helpers</h2>
+<p>
+<tt>conflict_warnings</tt> provides view helpers that add parameters
+<tt>catch_conflicts</tt> require to links:
+</p>
+<pre>
+    &lt;%= link_to_remote_with_timestamp(&quot;Confirm&quot;, confirm_event_url(@event) %&gt;
+</pre>
+<p>
+And forms:
+</p>
+<pre>
+    &lt;%= f.timestamp %&gt;
+</pre>
+<p>
+or
+</p>
+<pre>
+    &lt;%= timestamp_tag %&gt;
+</pre>
+<h2>Javascript</h2>
+<p>
+<tt>conflict_warnings</tt> provides a javascript function for use in your
+RJS templates to update timestamps in regions of a page that are not
+updated as by an interrupted AJAX request.
+</p>
+<pre>
+    page.call('replaceTimeStamps', params[:page_rendered_at], Time.now.to_i)
+</pre>
 <h1>Documenation</h1>
 <p>
 This plugin comes with generated documentation for its provided methods and
@@ -151,17 +182,20 @@ classes in the doc folder.
 <p>
 In depth documentation of <tt>filter_conflicts</tt> and
 <tt>filter_resources_unavailable</tt> can be found in
-+ConflictWarnings::ActionController::ClassMethods+. While documentation of
+ConflictWarnings::ActionController::ClassMethods#. While documentation of
 <tt>catch_conflicts</tt> and <tt>catch_resources_unavaialble</tt> can be
-found in +ConflictWarnigns::ActionController::InstanceMethods+.
+found in ConflictWarnigns::ActionController::InstanceMethods#.
 </p>
 <p>
-<tt>conflict_warnings</tt> also provides some view helpers, for adding
-parameters <tt>catch_conflicts</tt> require to links. They can be found in
+<tt>conflict_warnings</tt> provides view helpers that add parameters
+<tt>catch_conflicts</tt> require to links. They can be found in <tt><a
+href="../classes/ConflictWarnings/ActionView/Helpers/UrlHelper.html">ConflictWarnings::ActionView::Helpers::UrlHelper</a></tt>,
 <tt><a
-href="../classes/ConflictWarnings/ActionView/Helpers/UrlHelper.html">ConflictWarnings::ActionView::Helpers::UrlHelper</a></tt>
+href="../classes/ConflictWarnings/ActionView/Helpers/PrototypeHelper.html">ConflictWarnings::ActionView::Helpers::PrototypeHelper</a></tt>,
+<tt><a
+href="../classes/ConflictWarnings/ActionView/Helpers/FormHelper.html">ConflictWarnings::ActionView::Helpers::FormHelper</a></tt>,
 and <tt><a
-href="../classes/ConflictWarnings/ActionView/Helpers/PrototypeHelper.html">ConflictWarnings::ActionView::Helpers::PrototypeHelper</a></tt>
+href="../classes/ConflictWarnings/ActionView/Helpers/FormTagHelper.html">ConflictWarnings::ActionView::Helpers::FormTagHelper</a></tt>
 </p>
 <h1>Caveats</h1>
 <p>
@@ -171,13 +205,10 @@ receive enough information to reach a decision it will usually assumes the
 action is harmful. Records that produce a nil value to compare the time the
 requesting page was rendered will be allowed to complete successfully.
 </p>
-<p>
-Things To Do:
-</p>
-<h6>=====</h6>
-<p>
-*Handle additional formats beyond html and js
-</p>
+<h1>Things To Do:</h1>
+<pre>
+ * Handle additional formats beyond html and js
+</pre>
 <p>
 Copyright (c) 2009 Emery Finkelstein, released under the MIT license
 </p>
