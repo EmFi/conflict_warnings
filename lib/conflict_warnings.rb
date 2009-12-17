@@ -744,6 +744,7 @@ module ConflictWarnings #:nodoc:
               )
             )
             flash[flash_key] = message unless message.blank?
+            @instance = instance
             if block_given?
               instance_eval(&block)
             else
@@ -880,7 +881,7 @@ module ConflictWarnings #:nodoc:
           
           unless (result.is_a?(Numeric) && result.respond_to?(">") && result > 0) ||
               (!result.is_a?(Numeric) && result)
-            
+            @instance = instance
             flash[flash_key] = message unless message.blank?
             if block_given?
               instance_eval(&block)
