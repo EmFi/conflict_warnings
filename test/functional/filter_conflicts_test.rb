@@ -77,6 +77,7 @@ class FilterConflictsTest < ActionController::TestCase
                   get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i}
                   assert_response 409
                   assert_template("action1_conflict")
+                  assert_match /Updated In the Future/, @response.body
                 end # should not redirect and render default template
               end # context with template
             end # context with timestamp in the future
@@ -269,6 +270,7 @@ class FilterConflictsTest < ActionController::TestCase
                   get :action1, :id => 2, :page_rendered_at =>Time.now.to_i, :format => "js"
                   assert_response 409
                   assert_template("action1_conflict.rjs")
+                  assert_match /Updated In the Future/, @response.body
                 end # should not redirect and render default template
               end # context with template
             end # context with timestamp in the future
@@ -1029,7 +1031,7 @@ assert_redirected_to "/"
             context "without conflict" do
               context "without timestamp parameter" do
                 should "redirect" do
-                  get :action1, :id => 1, :name => "Upated In the Future"
+                  get :action1, :id => 1, :name => "Updated In the Future"
 assert_redirected_to "/"
                 end
               end
@@ -1039,13 +1041,13 @@ assert_redirected_to "/"
                 context "on action in only" do
                   context "without timestamp parameter" do
                     should "redirect" do
-                      get :action1, :id => 2, :name => "Upated In the Future"
+                      get :action1, :id => 2, :name => "Updated In the Future"
 assert_redirected_to "/"
                     end
                   end
                   should "not redirect" do
                     get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i,
-                      :name => "Upated In the Future"}
+                      :name => "Updated In the Future"}
                     assert_response :success
                   end
                 end # on action in only
@@ -1078,7 +1080,7 @@ assert_redirected_to "/"
                 context "without conflict" do
                   context "without timestamp parameter" do
                     should "redirect" do
-                      get :action1, :id => 1, :name => "Upated In the Future"
+                      get :action1, :id => 1, :name => "Updated In the Future"
 assert_redirected_to "/"
                     end
                   end
@@ -1088,14 +1090,14 @@ assert_redirected_to "/"
                     context "on action in only" do
                       context "without timestamp parameter" do
                         should "redirect" do
-                          get :action1, :id => 2, :name => "Upated In the Future"
+                          get :action1, :id => 2, :name => "Updated In the Future"
 assert_redirected_to "/"
                         end
                       end
                       should "not redirect" do
 
                         get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i,
-                          :name => "Upated In the Future"}
+                          :name => "Updated In the Future"}
                         assert_redirected_to "/"
                       end
                     end # on action in only
@@ -1687,7 +1689,7 @@ assert_redirected_to "/"
             context "without conflict" do
               context "without timestamp parameter" do
                 should "redirect" do
-                  get :action1, :id => 1, :name => "Upated In the Future"
+                  get :action1, :id => 1, :name => "Updated In the Future"
                   assert_redirected_to "/"
                 end
               end
@@ -1697,13 +1699,13 @@ assert_redirected_to "/"
                 context "on action in only" do
                   context "without timestamp parameter" do
                     should "redirect" do
-                      get :action1, :id => 2, :name => "Upated In the Future"
+                      get :action1, :id => 2, :name => "Updated In the Future"
                       assert_redirected_to "/"
                     end
                   end
                   should "redirect" do
                     get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i,
-                      :name => "Upated In the Future"}
+                      :name => "Updated In the Future"}
                     assert_redirected_to "/"
                   end
                 end # on action in only
@@ -1736,7 +1738,7 @@ assert_redirected_to "/"
                 context "without conflict" do
                   context "without timestamp parameter" do
                     should "redirect" do
-                      get :action1, :id => 1, :name => "Upated In the Future"
+                      get :action1, :id => 1, :name => "Updated In the Future"
                       assert_redirected_to "/"
                     end
                   end
@@ -1746,14 +1748,14 @@ assert_redirected_to "/"
                     context "on action in only" do
                       context "without timestamp parameter" do
                         should "redirect" do
-                          get :action1, :id => 2, :name => "Upated In the Future"
+                          get :action1, :id => 2, :name => "Updated In the Future"
                           assert_redirected_to "/"
                         end
                       end
                       should "not redirect" do
 
                         get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i,
-                          :name => "Upated In the Future"}
+                          :name => "Updated In the Future"}
                         assert_redirected_to "/"
                       end
                     end # on action in only
@@ -2283,7 +2285,7 @@ assert_redirected_to "/"
                   @controller = FilterConflictWithTemplateTestController.new
                   get :action1, {:id => 2, :page_rendered_at =>Time.now.to_i}
                   assert_response 409
-                  assert_template("custom/custom_conflict")
+                  assert_template("custom/custom_conflict")                  
                 end # should not redirect and render default template
               end # context with template
             end # context with timestamp in the future

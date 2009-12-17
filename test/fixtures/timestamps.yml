@@ -3,7 +3,7 @@ timestamp_missing:
   name: Missing Timestamp
 far_future:
   id: 2
-  name: Upated In the Future
+  name: Updated In the Future
   updated_on: <%= DateTime.now + 1.year %>
 far_past:
   id: 3 

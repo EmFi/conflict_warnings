@@ -271,7 +271,9 @@ module ConflictWarnings #:nodoc:
       #                       "#{controller_name}/#{action_name}_resource_unavailable". 
       #                       When a conflict is identified on search for a html.erb, .rhtml,
       #                       or .rjs file depending on the request. If one isn't found the default action 
-      #                       is taken.
+      #                       is taken. The record used to generate the comparison is avaialble to template
+      #                       as @#{model_name}. Where model name is the name of the model used to find the
+      #                       record.
       #
       # [<tt>:message</tt>] Message added to the flash hash. The catch_conflicts default value
       #                     is "Your request will not be processed becasue the data you were viewing is
@@ -559,7 +561,10 @@ module ConflictWarnings #:nodoc:
       #                       "#{controller_name}/#{action_name}_resource_unavailable".
       #                       When a conflict is identified on search for a html.erb, .rhtml,
       #                       or .rjs file depending on the request. If one isn't found the default action
-      #                       is taken.
+      #                       is taken. The record used to generate the comparison is avaialble to template
+      #                       as @#{model_name}. Where model name is the name of the model used to find the
+      #                       record. 
+      #
       #
       # [<tt>:message</tt>] Message added to the flash hash. The catch_conflicts default value
       #                     is "Your request will not be processed becasue the data you were viewing is
@@ -662,7 +667,7 @@ module ConflictWarnings #:nodoc:
         #
         #     #updates relevant portions of page and highlights changes.
         #     page.replace_html :warning, "We cannot complete your request at this time."
-        #     page.replace html :dynamic_content, render :partial => 'sample/dynamic_content'
+        #     page.replace html :dynamic_content, render :partial => 'sample/dynamic_content', :locals => {:sample => @sample}
         #     page.visual_effect :highlight :dynamic_content, :duration => 5
         #
         #
@@ -744,7 +749,7 @@ module ConflictWarnings #:nodoc:
               )
             )
             flash[flash_key] = message unless message.blank?
-            @instance = instance
+            instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
             if block_given?
               instance_eval(&block)
             else
@@ -881,7 +886,7 @@ module ConflictWarnings #:nodoc:
           
           unless (result.is_a?(Numeric) && result.respond_to?(">") && result > 0) ||
               (!result.is_a?(Numeric) && result)
-            @instance = instance
+            instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
             flash[flash_key] = message unless message.blank?
             if block_given?
               instance_eval(&block)

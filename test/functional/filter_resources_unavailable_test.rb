@@ -77,6 +77,7 @@ class FilterResourcesUnavailableTestTest < ActionController::TestCase
                   get :action1, :id => 2
                   assert_response 409
                   assert_template("action1_resource_unavailable")
+                  assert_match /No Resources Remaining/, @response.body
                 end # should not redirect and render default template
               end # context with template
             end # context with resource unavailable
@@ -213,6 +214,7 @@ class FilterResourcesUnavailableTestTest < ActionController::TestCase
                   get :action1, :id => 2,  :format => "js"
                   assert_response 409
                   assert_template("action1_resource_unavailable.rjs")
+                  assert_match /No Resources Remaining/, @response.body
                 end # should not redirect and render default template
               end # context with template
             end # context with resource unavailable
