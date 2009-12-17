@@ -1,4 +1,7 @@
 class Timestamp < ActiveRecord::Base
+  def timestamp_at time
+    time
+  end
 end
 
 class Resource < ActiveRecord::Base
@@ -18,6 +21,9 @@ class Resource < ActiveRecord::Base
     def returns_false
       false
     end
+  end
+  def acquire_lock_for_user user    
+    return user == "Granted"
   end
 end
 

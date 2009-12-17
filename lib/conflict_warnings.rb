@@ -221,6 +221,15 @@ module ConflictWarnings #:nodoc:
       #
       # == Common Options for filters
       #
+      # <tt>filter_conflicts *args, options = {}, &block</tt>
+      # <tt>filter_resources_unavilable *args, options = {}, &block</tt>
+      #
+      # *args are passed to the accessor. The block is optional and will be evaluated in place
+      # of the conflict_warnings default actions when a problem request is identified.
+      # It should contain a respond_to block.
+      #
+      # Accepted options:
+      #
       # [<tt>:model</tt>] ActiveRecord model that will be used to determine if 
       #                   there is a conflict. Default value is derived from the current
       #                   controller name. Can be a provided, as a string, symbol, constant, or
@@ -253,6 +262,8 @@ module ConflictWarnings #:nodoc:
       #                       In catch_conflicts the default is updated_at or updated_on, if such a column 
       #                       exists. In catch_resource_conflicts the default is the first column with
       #                       a name matching /available/.
+      #
+      #
       #
       # [<tt>:template</tt>]  Template file to render in event of a conflict. For catch_conflicts,
       #                       the default value is "#{controller_name}/#{action_name}_conflict". For
@@ -300,7 +311,11 @@ module ConflictWarnings #:nodoc:
         # be changed. If the timestamp provided in the parameters is deteremined to be invalid
         # the request is interrupted.
         #
-        # +filter_conflicts+ accepts three additional options to the ones described above.
+        # *args are passed to the accessor. The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
+        # +filter_conflicts+ accepts three additional options to the common options described above.
         #
         # [<tt>:simulate_conflicts_on_requests_before</tt>] Instead of using a record to
         #                                                   select a timestamp for determine conflicts,
@@ -358,7 +373,8 @@ module ConflictWarnings #:nodoc:
         # * get: :id => 1, :action => :show
 
 
-        def filter_conflicts(options = {},&block)
+        def filter_conflicts(*args,&block)
+          options = args.extract_options!
           options.assert_valid_keys(CWValidKeysForFilterConflicts)
           valid_options_for_conflict_warnings?(:filter_resource_conflicts, options)
           except = options[:except] ? options.delete(:except) : nil
@@ -386,6 +402,11 @@ module ConflictWarnings #:nodoc:
         #
         # The request is interrupted if the accessor returning false, or an numeric
         # value less than or equal to 0.
+        #
+        # *args are passed to the accessor. The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
         #
         # In addition to the common options listed above, +filter_resources_unavailable+
         # also accepts the following option:
@@ -425,7 +446,8 @@ module ConflictWarnings #:nodoc:
 
 
 
-        def filter_resources_unavailable(options = {},&block)
+        def filter_resources_unavailable(*args,&block)
+          options = args.extract_options!
           options.assert_valid_keys(CWValidKeysForFilterResourcesUnavailable)
           valid_options_for_conflict_warnings?(:filter_resource_conflicts, options)
           except = options[:except] ? options.delete(:except) : nil
@@ -487,7 +509,16 @@ module ConflictWarnings #:nodoc:
       # Both of these methods return true if a request was interrupted, otherwise
       # they return false.
       #
-      # == Common Options for catches
+      # == Common Options for catch_*
+      #
+      # <tt>catch_conflicts *args, options = {}, &block</tt>
+      # <tt>catch_resources_unavilable *args, options = {}, &block</tt>
+      #
+      # *args are passed to the accessor. The block is optional and will be evaluated in place
+      # of the conflict_warnings default actions when a problem request is identified.
+      # It should contain a respond_to block.
+      #
+      # Accepted options:
       #
       # [<tt>:model</tt>] ActiveRecord model that will be used to determine if
       #                   there is a conflict. Default value is derived from the current
@@ -565,7 +596,11 @@ module ConflictWarnings #:nodoc:
         # be changed. If the timestamp provided in the parameters is deteremined to be invalid
         # the request is interrupted.
         #
-        # +catch_conflicts+ accepts three additional options to the ones described above.
+        # *args are passed to the accessor. The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
+        # +catch_conflicts+ accepts three additional options to the common options described above.
         #
         # [<tt>:simulate_conflicts_on_requests_before</tt>] Instead of using a record to
         #                                                   select a timestamp for determine conflicts,
@@ -639,7 +674,8 @@ module ConflictWarnings #:nodoc:
         #
 
 
-        def catch_conflicts(options = {},&block)
+        def catch_conflicts(*args,&block)
+          options = args.extract_options!
           options.assert_valid_keys(CWValidKeysForCatchConflicts)
           self.class.send :valid_options_for_conflict_warnings?, :catch_conflict, options
           model = options[:model] || self.controller_name.singularize
@@ -680,7 +716,7 @@ module ConflictWarnings #:nodoc:
               end
               instance = model.find(:first, find_options)
             end
-            instance && accessor && instance.send(accessor)
+            instance && accessor && instance.send(accessor, *args)
           end
           redirect_requests_after = options[:simulate_conflict_on_requests_after]
           timestamp_key = options[:timestamp_key] || :page_rendered_at
@@ -762,6 +798,10 @@ module ConflictWarnings #:nodoc:
         # The request is interrupted if the accessor returning false, or an numeric
         # value less than or equal to 0.
         #
+        # *args are passed to the accessor. The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
         # In addition to the common options listed above, +catch_resources_unavailable+
         # also accepts the following option:
         #
@@ -786,7 +826,8 @@ module ConflictWarnings #:nodoc:
         # Will interrupt a request if the record being accessed is locked.
         #
         
-        def catch_resources_unavailable(options = {},&block)
+        def catch_resources_unavailable(*args,&block)
+          options = args.extract_options!
           options.assert_valid_keys(CWValidKeysForCatchResourcesUnavailable)
           self.class.send :valid_options_for_conflict_warnings?, :catch_resource_unavailable, options
           model = options[:model] || self.controller_name.singularize
@@ -829,7 +870,7 @@ module ConflictWarnings #:nodoc:
               end
               instance = model.find(:first, find_options)
             end
-            instance && accessor && instance.send(accessor)
+            instance && accessor && instance.send(accessor, *args)
           end
           
           

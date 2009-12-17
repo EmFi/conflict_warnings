@@ -865,11 +865,11 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "without accessor" do
             context "with id" do
               setup do
-                  class CatchResourcesUnavailableWithModelAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :model => Resource, :id => 2, :params_id_key => :name)
-                    end
+                class CatchResourcesUnavailableWithModelAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :model => Resource, :id => 2, :params_id_key => :name)
                   end
+                end
                 @controller = CatchResourcesUnavailableWithModelAndParamsIdKeyAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -977,12 +977,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
             context "with id" do
               setup do
                 class CatchResourcesUnavailableWithModelAndFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
-                        :id => 2, :accessor=> :resource,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
+                      :id => 2, :accessor=> :resource,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithModelAndFindOptionsAccessorAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -995,12 +995,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "with id" do
             context "without accessor" do
               setup  do
-                  class CatchResourcesUnavailableWithModelAndFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :model => Resource, :id => 2,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                class CatchResourcesUnavailableWithModelAndFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :model => Resource, :id => 2,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithModelAndFindOptionsAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -1013,12 +1013,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "with params id key" do
             context "without accessor" do
               setup do
-                  class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
-                        :params_id_key => :name, :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
+                      :params_id_key => :name, :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyTestsController.new
               end
               should "raise Argument Error" do
@@ -1030,54 +1030,54 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
             context "with accessor" do
               context "without id" do
                 setup do
-                    class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
-                          :accessor => :resource_left, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
+                        :accessor => :resource_left, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndAccessorTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
               end #context without id
               context "with id" do
                 setup do
-                    class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
-                          :id => 2, :accessor=> :resource, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable( :model => ResourceWithCustomAccessor,
+                        :id => 2, :accessor=> :resource, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAccessorAndIdTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
               end #with id
             end # with accessor
             context "without accessor" do
               context "with id" do
                 setup do
-                    class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable( :model => Resource, :id => 2, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable( :model => Resource, :id => 2, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithModelAndFindOptionsAndParamsIdKeyAndIdTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
 
               end #with id
@@ -1782,17 +1782,17 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
 
           context "with class method" do
             setup do
-                class CatchResourcesUnavailableWithIdAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  before_filter do |controller|
-                    controller.catch_resources_unavailable( :id => 2, :class_method => true)
-                  end
+              class CatchResourcesUnavailableWithIdAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.catch_resources_unavailable( :id => 2, :class_method => true)
                 end
-              @controller = CatchResourcesUnavailableWithIdAndClassMethodTestsController.new
               end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
-                end
+              @controller = CatchResourcesUnavailableWithIdAndClassMethodTestsController.new
+            end
+            should "raise Argument Error" do
+              assert_raise(ArgumentError) do
+                get :action1, :id => 3
+              end
               
             end
           end #with Class method
@@ -1890,11 +1890,11 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
             end #context without id
             context "with id" do
               setup do
-                  class CatchResourcesUnavailableWithParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name)
-                    end
+                class CatchResourcesUnavailableWithParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name)
                   end
+                end
                 @controller = CatchResourcesUnavailableWithParamsIdKeyAccessorAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -1907,11 +1907,11 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "without accessor" do
             context "with id" do
               setup do
-                  class CatchResourcesUnavailableWithParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable(  :id => 2, :params_id_key => :name)
-                    end
+                class CatchResourcesUnavailableWithParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable(  :id => 2, :params_id_key => :name)
                   end
+                end
                 @controller = CatchResourcesUnavailableWithParamsIdKeyAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -1923,17 +1923,17 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           end #without accessor
           context "with class method" do
             setup do
-                class CatchResourcesUnavailableWithParamsIdKeyAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  before_filter do |controller|
-                    controller.catch_resources_unavailable( :params_id_key => :new_key, :class_method => true)
-                  end
+              class CatchResourcesUnavailableWithParamsIdKeyAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.catch_resources_unavailable( :params_id_key => :new_key, :class_method => true)
                 end
-              @controller = CatchResourcesUnavailableWithParamsIdKeyAndClassMethodTestsController.new
               end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
-                end
+              @controller = CatchResourcesUnavailableWithParamsIdKeyAndClassMethodTestsController.new
+            end
+            should "raise Argument Error" do
+              assert_raise(ArgumentError) do
+                get :action1, :id => 3
+              end
             end
           end #with Class method
         end #with params id key
@@ -2023,12 +2023,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
             end #context without id
             context "with id" do
               setup do
-                  class CatchResourcesUnavailableWithFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :id => 2, :accessor=> :resource,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                class CatchResourcesUnavailableWithFindOptionsAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :id => 2, :accessor=> :resource,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithFindOptionsAccessorAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -2041,12 +2041,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "with id" do
             context "without accessor" do
               setup do
-                  class CatchResourcesUnavailableWithFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable(  :id => 2,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                class CatchResourcesUnavailableWithFindOptionsAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable(  :id => 2,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithFindOptionsAndIdTestsController.new
               end
               should "raise Argument Error" do
@@ -2059,12 +2059,12 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           context "with params id key" do
             context "without accessor" do
               setup do
-                  class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
-                    before_filter do |controller|
-                      controller.catch_resources_unavailable( :params_id_key => :name,
-                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                    end
+                class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyTestsController < ::ConflictWarningsTest::ControllerStub
+                  before_filter do |controller|
+                    controller.catch_resources_unavailable( :params_id_key => :name,
+                      :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                   end
+                end
                 @controller = CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyTestsController.new
               end
               should "raise Argument Error" do
@@ -2076,52 +2076,52 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
             context "with accessor" do
               context "without id" do
                 setup do
-                    class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable(  :accessor => :resource_left, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndAccessorTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable(  :accessor => :resource_left, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndAccessorTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
               end #context without id
               context "with id" do
                 setup do
-                    class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable( :id => 2, :accessor=> :resource, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAccessorAndIdTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
               end #with id
             end # with accessor
             context "without accessor" do
               context "with id" do
                 setup do
-                    class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
-                      before_filter do |controller|
-                        controller.catch_resources_unavailable(  :id => 2, :params_id_key => :name,
-                          :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
-                      end
+                  class CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndIdTestsController < ::ConflictWarningsTest::ControllerStub
+                    before_filter do |controller|
+                      controller.catch_resources_unavailable(  :id => 2, :params_id_key => :name,
+                        :find_options => Proc.new {{:conditions => {:name => params[:name]}}})
                     end
+                  end
                   @controller = CatchResourcesUnavailableWithFindOptionsAndParamsIdKeyAndIdTestsController.new
-              end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
                 end
+                should "raise Argument Error" do
+                  assert_raise(ArgumentError) do
+                    get :action1, :id => 3
+                  end
                 end
 
               end #with id
@@ -2129,33 +2129,33 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
           end #with params id key
           context "with bad find options" do
             setup do
-                class CatchResourcesUnavailableBadFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
-                  before_filter do |controller|
-                    controller.catch_resources_unavailable( :find_options => {:conditions => {:name => "Test value"}})
-                  end
+              class CatchResourcesUnavailableBadFindOptionsTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.catch_resources_unavailable( :find_options => {:conditions => {:name => "Test value"}})
                 end
-            @controller = CatchResourcesUnavailableBadFindOptionsTestsController.new
               end
-              should "raise Argument Error when find options is not a proc" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
-                end
+              @controller = CatchResourcesUnavailableBadFindOptionsTestsController.new
+            end
+            should "raise Argument Error when find options is not a proc" do
+              assert_raise(ArgumentError) do
+                get :action1, :id => 3
+              end
             end
           end
           context "with class method" do
             setup do
-                class CatchResourcesUnavailableWithFindOptionsAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
-                  before_filter do |controller|
-                    controller.catch_resources_unavailable( :class_method => true,
-                      :find_options => Proc.new {{:conditions => {:id => 3}}})
-                  end
+              class CatchResourcesUnavailableWithFindOptionsAndClassMethodTestsController < ::ConflictWarningsTest::ControllerStub
+                before_filter do |controller|
+                  controller.catch_resources_unavailable( :class_method => true,
+                    :find_options => Proc.new {{:conditions => {:id => 3}}})
                 end
-              @controller = CatchResourcesUnavailableWithFindOptionsAndClassMethodTestsController.new
               end
-              should "raise Argument Error" do
-                assert_raise(ArgumentError) do
-                  get :action1, :id => 3
-                end
+              @controller = CatchResourcesUnavailableWithFindOptionsAndClassMethodTestsController.new
+            end
+            should "raise Argument Error" do
+              assert_raise(ArgumentError) do
+                get :action1, :id => 3
+              end
             end
           end #with Class method
         end # with find options
@@ -2346,5 +2346,35 @@ class CatchResourcesUnavailableWarningsBasicTest < ActionController::TestCase
         end # context with basic resource
       end #accepts js
     end #with block
+    context "with args" do      
+      setup do
+        class CatchResourcesUnavailableWithArgsAndAccessorController < ::ConflictWarningsTest::ControllerStub
+          #include ::ConflictWarningsTest::ControllerBits
+
+          before_filter do |controller|
+            controller.catch_resources_unavailable(controller.params[:user], :accessor => :acquire_lock_for_user)
+          end
+          #cattr_accessor :controller_name
+        end
+        @controller = CatchResourcesUnavailableWithArgsAndAccessorController.new
+        ActionController::Routing::Routes.draw {|map|
+          map.connect "/:action", :controller => @controller.controller_path
+          map.connect "/:action/:id", :controller => @controller.controller_path
+        }
+        CatchResourcesUnavailableWithArgsAndAccessorController.view_paths = ['...']
+        
+      CatchResourcesUnavailableWithArgsAndAccessorController.controller_name = "resources"
+      end
+      context "should pass args to model" do
+        should "succeed when params[:user] == 'Granted'" do
+          get :action1, :id => 3, :user => "Granted"
+          assert_response :success
+        end
+        should "fail when params[:user] != 'Gets Lock'" do
+          get :action1, :id => 3, :user => "Denied"
+          assert_redirected_to "/"
+        end
+      end
+    end
   end #context catch resource unavailables
 end

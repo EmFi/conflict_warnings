@@ -33,13 +33,12 @@ or
 The underlying methods are also provided for use in your own filters, as
 +catch_conflict+ and +catch_resource_conflict+.
 
-    class CustomFilterExampleController < ApplicationController
-      before_filter :check_lock
+    class LockingResourcesController < ApplicationController
+      before_filter :login_required, :acquire_lock
 
       protected
-      def check_lock
-        unless catch_resources_unavailable :accessor => :unlocked
-          acquire_lock
+      def acquire_lock
+          catch_resources_unavailable current_user, :accessor => :acquire_lock_for_user
         end
       end
     end

@@ -117,7 +117,20 @@ who&#8216;s status is not 302 Redirected.
 Both of these methods return true if a request was interrupted, otherwise
 they return false.
 </p>
-<h2>Common Options for catches</h2>
+<h2>Common Options for catch_*</h2>
+<p>
+<tt><a href="InstanceMethods.html#M000003">catch_conflicts</a> *args,
+options = {}, &amp;block</tt> <tt>catch_resources_unavilable *args, options
+= {}, &amp;block</tt>
+</p>
+<p>
+*args are passed to the accessor. The block is optional and will be
+evaluated in place of the conflict_warnings default actions when a problem
+request is identified. It should contain a respond_to block.
+</p>
+<p>
+Accepted options:
+</p>
 <dl>
 <dt><tt>:model</tt></dt><dd>ActiveRecord model that will be used to determine if there is a conflict.
 Default value is derived from the current controller name. Can be a
@@ -225,7 +238,7 @@ provided, the default action as described above is taken.
 
         <div class="method-heading">
           <a href="#M000003" class="method-signature">
-          <span class="method-name">catch_conflicts</span><span class="method-args">(options = {},&amp;block)</span>
+          <span class="method-name">catch_conflicts</span><span class="method-args">(*args,&amp;block)</span>
           </a>
         </div>
       
@@ -260,8 +273,13 @@ the record to be changed. If the timestamp provided in the parameters is
 deteremined to be invalid the request is interrupted.
 </p>
 <p>
+*args are passed to the accessor. The block is optional and will be
+evaluated in place of the conflict_warnings default actions when a problem
+request is identified. It should contain a respond_to block.
+</p>
+<p>
 <tt><a href="InstanceMethods.html#M000003">catch_conflicts</a></tt> accepts
-three additional options to the ones described above.
+three additional options to the common options described above.
 </p>
 <dl>
 <dt><tt>:simulate_conflicts_on_requests_before</tt></dt><dd>Instead of using a record to select a timestamp for determine conflicts,
@@ -339,109 +357,110 @@ highlighting the changes.
             onclick="toggleCode('M000003-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000003-source">
 <pre>
-     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 642</span>
-642:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">catch_conflicts</span>(<span class="ruby-identifier">options</span> = {},<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-643:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForCatchConflicts</span>)
-644:           <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">send</span> <span class="ruby-identifier">:valid_options_for_conflict_warnings?</span>, <span class="ruby-identifier">:catch_conflict</span>, <span class="ruby-identifier">options</span>
-645:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:model</span>] <span class="ruby-operator">||</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">controller_name</span>.<span class="ruby-identifier">singularize</span>
-646:           <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>)
-647:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">get_model</span> <span class="ruby-identifier">model</span>
-648:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
-649:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
-650:               <span class="ruby-constant">CWInstanceSelectionKeys</span>.<span class="ruby-identifier">all?</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">k</span>].<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span>
-651:               [<span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>],
-652:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>]].<span class="ruby-identifier">all?</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">nil?</span>
-653:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;catch_conflicts: You must provide a method of &quot;</span> <span class="ruby-operator">+</span>
-654:               <span class="ruby-value str">&quot;generating a time used to decide which requests are fresh. Please &quot;</span> <span class="ruby-operator">+</span>
-655:               <span class="ruby-value str">&quot;see redirect if conflict documentation for more details.&quot;</span>
-656:           <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>]].<span class="ruby-identifier">nil?</span>) <span class="ruby-operator">&amp;&amp;</span>
-657:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:page_rendered_at</span>].<span class="ruby-identifier">nil?</span>
-658:             <span class="ruby-comment cmt"># no timestamp provided</span>
-659:             <span class="ruby-keyword kw">return</span>
-660:             
-661:           <span class="ruby-keyword kw">end</span>          
-662:           <span class="ruby-identifier">redirect_requests_before</span> =
-663:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>]
-664:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>]
-665:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>]
-666:             <span class="ruby-keyword kw">nil</span>
-667:           <span class="ruby-keyword kw">else</span>
-668:             <span class="ruby-identifier">accessor</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:accessor</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">column_names</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/(updated_(at|on))/</span>).<span class="ruby-identifier">first</span>            
-669:             <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">instance</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">nil?</span>
-670:               <span class="ruby-identifier">find_options</span> = {}
-671:               <span class="ruby-identifier">id</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:id</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]] <span class="ruby-operator">||</span> 
-672:                 (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>( <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>] <span class="ruby-operator">||</span><span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]))
-673:               <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>]
-674:                 <span class="ruby-identifier">find_options</span> = <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>])
-675:               <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">id</span>
-676:                 <span class="ruby-identifier">find_options</span> = {<span class="ruby-identifier">:conditions</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>}}
-677:               <span class="ruby-keyword kw">end</span>
-678:               <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">find_options</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>)
-679:                 <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;Find options does not evaluate to a Hash&quot;</span>
-680:               <span class="ruby-keyword kw">end</span>
-681:               <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span>.<span class="ruby-identifier">find</span>(<span class="ruby-identifier">:first</span>, <span class="ruby-identifier">find_options</span>)
-682:             <span class="ruby-keyword kw">end</span>
-683:             <span class="ruby-identifier">instance</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">accessor</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>)
-684:           <span class="ruby-keyword kw">end</span>
-685:           <span class="ruby-identifier">redirect_requests_after</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>]
-686:           <span class="ruby-identifier">timestamp_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:page_rendered_at</span>
-687:           <span class="ruby-identifier">time_stamp</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">timestamp_key</span>]          
-688:           <span class="ruby-identifier">flash_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:flash_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:warning</span>
-689:           <span class="ruby-identifier">message</span> = <span class="ruby-identifier">options</span> [<span class="ruby-identifier">:message</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;Your request will not be processed &quot;</span> <span class="ruby-operator">+</span>
-690:             <span class="ruby-value str">&quot;because the data you were viewing is out of date. The page has &quot;</span> <span class="ruby-operator">+</span>
-691:             <span class="ruby-value str">&quot;been refreshed. Please try again.&quot;</span>
-692:           <span class="ruby-identifier">rendered_at</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">at</span>(<span class="ruby-identifier">time_stamp</span>.<span class="ruby-identifier">to_i</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">time_stamp</span>
-693:           
-694:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">rendered_at</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&amp;&amp;</span>
-695:               <span class="ruby-comment cmt">#case where both are provided</span>
-696:             (
-697:               (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
-698:                   (( <span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
-699:                       ((<span class="ruby-identifier">redirect_requests_after</span><span class="ruby-operator">..</span><span class="ruby-identifier">redirect_requests_before</span>) <span class="ruby-operator">===</span> <span class="ruby-identifier">rendered_at</span>))<span class="ruby-operator">||</span>
-700:                     (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
-701:                       <span class="ruby-operator">!</span>((<span class="ruby-identifier">redirect_requests_before</span><span class="ruby-operator">..</span><span class="ruby-identifier">redirect_requests_after</span>) <span class="ruby-operator">===</span> <span class="ruby-identifier">rendered_at</span>))
-702:                 )) <span class="ruby-operator">||</span>
-703:                 (
-704:                 (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_after</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
-705:                     <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&lt;</span> <span class="ruby-identifier">redirect_requests_before</span>) <span class="ruby-operator">||</span>
-706:                   (<span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_before</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
-707:                     <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">redirect_requests_after</span>)
-708:               )
-709:             )
-710:             <span class="ruby-identifier">flash</span>[<span class="ruby-identifier">flash_key</span>] = <span class="ruby-identifier">message</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">message</span>.<span class="ruby-identifier">blank?</span>
-711:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
-712:               <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-713:             <span class="ruby-keyword kw">else</span>
-714:               <span class="ruby-identifier">template_to_use</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:template</span>] <span class="ruby-operator">||</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">controller_name</span>, <span class="ruby-identifier">action_name</span>)
-715:               <span class="ruby-identifier">template_to_use</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp re">/(_conflict)?$/</span>, <span class="ruby-value str">&quot;_conflict&quot;</span>)
-716:               <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
-717:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> {
-718:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
-719:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
-720:                   <span class="ruby-keyword kw">else</span>
-721:                     <span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span><span class="ruby-comment cmt">#, :status =&gt; 409</span>
-722:                   <span class="ruby-keyword kw">end</span>
-723:                 }
-724:                 
-725:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">js</span> {
-726:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
-727:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>,  <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
-728:                   <span class="ruby-keyword kw">else</span>
-729:                     <span class="ruby-identifier">render</span>(<span class="ruby-identifier">:update</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">page</span><span class="ruby-operator">|</span>
-730:                       
-731:                       <span class="ruby-identifier">page</span>.<span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span>
-732:                       <span class="ruby-identifier">page</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;alert('#{ escape_javascript message}')&quot;</span>
-733:                     <span class="ruby-keyword kw">end</span>
-734:                     
-735:                   <span class="ruby-keyword kw">end</span>
-736:                   <span class="ruby-identifier">flash</span>.<span class="ruby-identifier">discard</span>(<span class="ruby-identifier">:warnings</span>)
-737:                 }
-738:               <span class="ruby-keyword kw">end</span>
-739:             <span class="ruby-keyword kw">end</span>
-740:             <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
-741:           <span class="ruby-keyword kw">end</span>
-742:           <span class="ruby-keyword kw">false</span>
-743:         <span class="ruby-keyword kw">end</span>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 677</span>
+677:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">catch_conflicts</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+678:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
+679:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForCatchConflicts</span>)
+680:           <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">send</span> <span class="ruby-identifier">:valid_options_for_conflict_warnings?</span>, <span class="ruby-identifier">:catch_conflict</span>, <span class="ruby-identifier">options</span>
+681:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:model</span>] <span class="ruby-operator">||</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">controller_name</span>.<span class="ruby-identifier">singularize</span>
+682:           <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>)
+683:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">get_model</span> <span class="ruby-identifier">model</span>
+684:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
+685:               <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
+686:               <span class="ruby-constant">CWInstanceSelectionKeys</span>.<span class="ruby-identifier">all?</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">k</span>].<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span>
+687:               [<span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>],
+688:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>]].<span class="ruby-identifier">all?</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">k</span>.<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">nil?</span>
+689:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;catch_conflicts: You must provide a method of &quot;</span> <span class="ruby-operator">+</span>
+690:               <span class="ruby-value str">&quot;generating a time used to decide which requests are fresh. Please &quot;</span> <span class="ruby-operator">+</span>
+691:               <span class="ruby-value str">&quot;see redirect if conflict documentation for more details.&quot;</span>
+692:           <span class="ruby-keyword kw">elsif</span> (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>]].<span class="ruby-identifier">nil?</span>) <span class="ruby-operator">&amp;&amp;</span>
+693:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:page_rendered_at</span>].<span class="ruby-identifier">nil?</span>
+694:             <span class="ruby-comment cmt"># no timestamp provided</span>
+695:             <span class="ruby-keyword kw">return</span>
+696:             
+697:           <span class="ruby-keyword kw">end</span>          
+698:           <span class="ruby-identifier">redirect_requests_before</span> =
+699:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>]
+700:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_before</span>]
+701:           <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>]
+702:             <span class="ruby-keyword kw">nil</span>
+703:           <span class="ruby-keyword kw">else</span>
+704:             <span class="ruby-identifier">accessor</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:accessor</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">column_names</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/(updated_(at|on))/</span>).<span class="ruby-identifier">first</span>            
+705:             <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">instance</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">nil?</span>
+706:               <span class="ruby-identifier">find_options</span> = {}
+707:               <span class="ruby-identifier">id</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:id</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]] <span class="ruby-operator">||</span> 
+708:                 (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>( <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>] <span class="ruby-operator">||</span><span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]))
+709:               <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>]
+710:                 <span class="ruby-identifier">find_options</span> = <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>])
+711:               <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">id</span>
+712:                 <span class="ruby-identifier">find_options</span> = {<span class="ruby-identifier">:conditions</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>}}
+713:               <span class="ruby-keyword kw">end</span>
+714:               <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">find_options</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>)
+715:                 <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;Find options does not evaluate to a Hash&quot;</span>
+716:               <span class="ruby-keyword kw">end</span>
+717:               <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span>.<span class="ruby-identifier">find</span>(<span class="ruby-identifier">:first</span>, <span class="ruby-identifier">find_options</span>)
+718:             <span class="ruby-keyword kw">end</span>
+719:             <span class="ruby-identifier">instance</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">accessor</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
+720:           <span class="ruby-keyword kw">end</span>
+721:           <span class="ruby-identifier">redirect_requests_after</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:simulate_conflict_on_requests_after</span>]
+722:           <span class="ruby-identifier">timestamp_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:timestamp_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:page_rendered_at</span>
+723:           <span class="ruby-identifier">time_stamp</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">timestamp_key</span>]          
+724:           <span class="ruby-identifier">flash_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:flash_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:warning</span>
+725:           <span class="ruby-identifier">message</span> = <span class="ruby-identifier">options</span> [<span class="ruby-identifier">:message</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;Your request will not be processed &quot;</span> <span class="ruby-operator">+</span>
+726:             <span class="ruby-value str">&quot;because the data you were viewing is out of date. The page has &quot;</span> <span class="ruby-operator">+</span>
+727:             <span class="ruby-value str">&quot;been refreshed. Please try again.&quot;</span>
+728:           <span class="ruby-identifier">rendered_at</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">at</span>(<span class="ruby-identifier">time_stamp</span>.<span class="ruby-identifier">to_i</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">time_stamp</span>
+729:           
+730:           <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">rendered_at</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&amp;&amp;</span>
+731:               <span class="ruby-comment cmt">#case where both are provided</span>
+732:             (
+733:               (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
+734:                   (( <span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
+735:                       ((<span class="ruby-identifier">redirect_requests_after</span><span class="ruby-operator">..</span><span class="ruby-identifier">redirect_requests_before</span>) <span class="ruby-operator">===</span> <span class="ruby-identifier">rendered_at</span>))<span class="ruby-operator">||</span>
+736:                     (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span>
+737:                       <span class="ruby-operator">!</span>((<span class="ruby-identifier">redirect_requests_before</span><span class="ruby-operator">..</span><span class="ruby-identifier">redirect_requests_after</span>) <span class="ruby-operator">===</span> <span class="ruby-identifier">rendered_at</span>))
+738:                 )) <span class="ruby-operator">||</span>
+739:                 (
+740:                 (<span class="ruby-identifier">redirect_requests_before</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_after</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
+741:                     <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&lt;</span> <span class="ruby-identifier">redirect_requests_before</span>) <span class="ruby-operator">||</span>
+742:                   (<span class="ruby-identifier">redirect_requests_after</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">redirect_requests_before</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
+743:                     <span class="ruby-identifier">rendered_at</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">redirect_requests_after</span>)
+744:               )
+745:             )
+746:             <span class="ruby-identifier">flash</span>[<span class="ruby-identifier">flash_key</span>] = <span class="ruby-identifier">message</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">message</span>.<span class="ruby-identifier">blank?</span>
+747:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
+748:               <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+749:             <span class="ruby-keyword kw">else</span>
+750:               <span class="ruby-identifier">template_to_use</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:template</span>] <span class="ruby-operator">||</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">controller_name</span>, <span class="ruby-identifier">action_name</span>)
+751:               <span class="ruby-identifier">template_to_use</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp re">/(_conflict)?$/</span>, <span class="ruby-value str">&quot;_conflict&quot;</span>)
+752:               <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+753:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> {
+754:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
+755:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
+756:                   <span class="ruby-keyword kw">else</span>
+757:                     <span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span><span class="ruby-comment cmt">#, :status =&gt; 409</span>
+758:                   <span class="ruby-keyword kw">end</span>
+759:                 }
+760:                 
+761:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">js</span> {
+762:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
+763:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>,  <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
+764:                   <span class="ruby-keyword kw">else</span>
+765:                     <span class="ruby-identifier">render</span>(<span class="ruby-identifier">:update</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">page</span><span class="ruby-operator">|</span>
+766:                       
+767:                       <span class="ruby-identifier">page</span>.<span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span>
+768:                       <span class="ruby-identifier">page</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;alert('#{ escape_javascript message}')&quot;</span>
+769:                     <span class="ruby-keyword kw">end</span>
+770:                     
+771:                   <span class="ruby-keyword kw">end</span>
+772:                   <span class="ruby-identifier">flash</span>.<span class="ruby-identifier">discard</span>(<span class="ruby-identifier">:warnings</span>)
+773:                 }
+774:               <span class="ruby-keyword kw">end</span>
+775:             <span class="ruby-keyword kw">end</span>
+776:             <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+777:           <span class="ruby-keyword kw">end</span>
+778:           <span class="ruby-keyword kw">false</span>
+779:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
@@ -452,7 +471,7 @@ highlighting the changes.
 
         <div class="method-heading">
           <a href="#M000004" class="method-signature">
-          <span class="method-name">catch_resources_unavailable</span><span class="method-args">(options = {},&amp;block)</span>
+          <span class="method-name">catch_resources_unavailable</span><span class="method-args">(*args,&amp;block)</span>
           </a>
         </div>
       
@@ -481,6 +500,11 @@ See the common options for other ways of specifying the deadline.
 <p>
 The request is interrupted if the accessor returning false, or an numeric
 value less than or equal to 0.
+</p>
+<p>
+*args are passed to the accessor. The block is optional and will be
+evaluated in place of the conflict_warnings default actions when a problem
+request is identified. It should contain a respond_to block.
 </p>
 <p>
 In addition to the common options listed above, <tt><a
@@ -514,95 +538,96 @@ Will interrupt a request if the record being accessed is locked.
             onclick="toggleCode('M000004-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000004-source">
 <pre>
-     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 789</span>
-789:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">catch_resources_unavailable</span>(<span class="ruby-identifier">options</span> = {},<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-790:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForCatchResourcesUnavailable</span>)
-791:           <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">send</span> <span class="ruby-identifier">:valid_options_for_conflict_warnings?</span>, <span class="ruby-identifier">:catch_resource_unavailable</span>, <span class="ruby-identifier">options</span>
-792:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:model</span>] <span class="ruby-operator">||</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">controller_name</span>.<span class="ruby-identifier">singularize</span>
-793:           <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>)
-794:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">get_model</span> <span class="ruby-identifier">model</span>
-795:           <span class="ruby-keyword kw">if</span> <span class="ruby-constant">CWInstanceSelectionKeys</span>.<span class="ruby-identifier">all?</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">k</span>].<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span>
-796:               [<span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>],
-797:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>], <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]].<span class="ruby-identifier">all?</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">option</span><span class="ruby-operator">|</span>
-798:               <span class="ruby-identifier">option</span>.<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">nil?</span>
-799:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;catch_resource_conflicts: You must supply a &quot;</span> <span class="ruby-operator">+</span>
-800:               <span class="ruby-value str">&quot;method of determining which resource to work with. &quot;</span><span class="ruby-operator">+</span>
-801:               <span class="ruby-value str">&quot;Please see redirect if resource unavailable documentation.&quot;</span>
-802:           <span class="ruby-keyword kw">end</span>
-803:           <span class="ruby-identifier">accessor</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:accessor</span>]
-804:           <span class="ruby-identifier">accessor</span> <span class="ruby-operator">||=</span> <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
-805:           <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">nil</span>           
-806:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">column_names</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/(available)/</span>).<span class="ruby-identifier">first</span>
-807:           <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">true</span>
-808:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">methods</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/available$/</span>).<span class="ruby-identifier">first</span>
-809:           <span class="ruby-keyword kw">else</span>
-810:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
-811:           <span class="ruby-keyword kw">end</span>
-812:           
-813:           <span class="ruby-identifier">result</span> = <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
-814:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>)
-815:           <span class="ruby-keyword kw">else</span>
-816:             <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">instance</span>
-817:               <span class="ruby-identifier">find_options</span> = {}
-818:               <span class="ruby-identifier">id</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:id</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]] <span class="ruby-operator">||</span>
-819:                 (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
-820:                   (<span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>] <span class="ruby-operator">||</span><span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]))
-821:               <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>]
-822:                 <span class="ruby-identifier">find_options</span> = <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>])
-823:               <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">id</span>
-824:                 <span class="ruby-identifier">find_options</span> = {<span class="ruby-identifier">:conditions</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>}}                
-825:               
-826:               <span class="ruby-keyword kw">end</span>
-827:               <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">find_options</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>)
-828:                 <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;Find options does not evaluate to a Hash&quot;</span>
-829:               <span class="ruby-keyword kw">end</span>
-830:               <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span>.<span class="ruby-identifier">find</span>(<span class="ruby-identifier">:first</span>, <span class="ruby-identifier">find_options</span>)
-831:             <span class="ruby-keyword kw">end</span>
-832:             <span class="ruby-identifier">instance</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">accessor</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>)
-833:           <span class="ruby-keyword kw">end</span>
-834:           
-835:           
-836:           <span class="ruby-identifier">flash_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:flash_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:warning</span>
-837:           <span class="ruby-identifier">message</span> = <span class="ruby-identifier">options</span> [<span class="ruby-identifier">:message</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;Your request will not be processed &quot;</span> <span class="ruby-operator">+</span>
-838:             <span class="ruby-value str">&quot;because the resource you require is no longer available.&quot;</span>
-839:           
-840:           <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">result</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Numeric</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-value str">&quot;&gt;&quot;</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>) <span class="ruby-operator">||</span>
-841:               (<span class="ruby-operator">!</span><span class="ruby-identifier">result</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Numeric</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span>)
-842:             
-843:             <span class="ruby-identifier">flash</span>[<span class="ruby-identifier">flash_key</span>] = <span class="ruby-identifier">message</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">message</span>.<span class="ruby-identifier">blank?</span>
-844:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
-845:               <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-846:             <span class="ruby-keyword kw">else</span>
-847:               <span class="ruby-identifier">template_to_use</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:template</span>] <span class="ruby-operator">||</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">controller_name</span>, <span class="ruby-identifier">action_name</span>)
-848:               <span class="ruby-identifier">template_to_use</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp re">/(_resource_unavailable)?$/</span>, <span class="ruby-value str">&quot;_resource_unavailable&quot;</span>)
-849:               <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
-850:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> {
-851:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
-852:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
-853:                   <span class="ruby-keyword kw">else</span>
-854:                     <span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span><span class="ruby-comment cmt">#, :status =&gt; 409</span>
-855:                   <span class="ruby-keyword kw">end</span>
-856:                 }
-857:                 
-858:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">js</span> {
-859:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
-860:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>,  <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
-861:                   <span class="ruby-keyword kw">else</span>
-862:                     <span class="ruby-identifier">render</span>(<span class="ruby-identifier">:update</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">page</span><span class="ruby-operator">|</span>
-863:                       
-864:                       <span class="ruby-identifier">page</span>.<span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span>
-865:                       <span class="ruby-identifier">page</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;alert('#{escape_javascript message}')&quot;</span>
-866:                     <span class="ruby-keyword kw">end</span>
-867:                     
-868:                   <span class="ruby-keyword kw">end</span>
-869:                   <span class="ruby-identifier">flash</span>.<span class="ruby-identifier">discard</span>
-870:                 }
-871:               <span class="ruby-keyword kw">end</span>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 829</span>
+829:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">catch_resources_unavailable</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+830:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
+831:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForCatchResourcesUnavailable</span>)
+832:           <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">send</span> <span class="ruby-identifier">:valid_options_for_conflict_warnings?</span>, <span class="ruby-identifier">:catch_resource_unavailable</span>, <span class="ruby-identifier">options</span>
+833:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:model</span>] <span class="ruby-operator">||</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">controller_name</span>.<span class="ruby-identifier">singularize</span>
+834:           <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">model</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>)
+835:           <span class="ruby-identifier">model</span> = <span class="ruby-identifier">get_model</span> <span class="ruby-identifier">model</span>
+836:           <span class="ruby-keyword kw">if</span> <span class="ruby-constant">CWInstanceSelectionKeys</span>.<span class="ruby-identifier">all?</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">k</span><span class="ruby-operator">|</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">k</span>].<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span>
+837:               [<span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>],
+838:               <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>], <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]].<span class="ruby-identifier">all?</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">option</span><span class="ruby-operator">|</span>
+839:               <span class="ruby-identifier">option</span>.<span class="ruby-identifier">nil?</span>} <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">nil?</span>
+840:             <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;catch_resource_conflicts: You must supply a &quot;</span> <span class="ruby-operator">+</span>
+841:               <span class="ruby-value str">&quot;method of determining which resource to work with. &quot;</span><span class="ruby-operator">+</span>
+842:               <span class="ruby-value str">&quot;Please see redirect if resource unavailable documentation.&quot;</span>
+843:           <span class="ruby-keyword kw">end</span>
+844:           <span class="ruby-identifier">accessor</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:accessor</span>]
+845:           <span class="ruby-identifier">accessor</span> <span class="ruby-operator">||=</span> <span class="ruby-keyword kw">case</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
+846:           <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">nil</span>           
+847:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">column_names</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/(available)/</span>).<span class="ruby-identifier">first</span>
+848:           <span class="ruby-keyword kw">when</span> <span class="ruby-keyword kw">true</span>
+849:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">methods</span>.<span class="ruby-identifier">grep</span>(<span class="ruby-regexp re">/available$/</span>).<span class="ruby-identifier">first</span>
+850:           <span class="ruby-keyword kw">else</span>
+851:             <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
+852:           <span class="ruby-keyword kw">end</span>
+853:           
+854:           <span class="ruby-identifier">result</span> = <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:class_method</span>]
+855:             <span class="ruby-identifier">model</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>)
+856:           <span class="ruby-keyword kw">else</span>
+857:             <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">instance</span>
+858:               <span class="ruby-identifier">find_options</span> = {}
+859:               <span class="ruby-identifier">id</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:id</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>]] <span class="ruby-operator">||</span>
+860:                 (<span class="ruby-identifier">options</span>[<span class="ruby-identifier">:params_id_key</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-operator">&amp;&amp;</span>
+861:                   (<span class="ruby-identifier">params</span>[<span class="ruby-identifier">model</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">underscore</span> <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;_id&quot;</span>] <span class="ruby-operator">||</span><span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]))
+862:               <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>]
+863:                 <span class="ruby-identifier">find_options</span> = <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">options</span>[<span class="ruby-identifier">:find_options</span>])
+864:               <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">id</span>
+865:                 <span class="ruby-identifier">find_options</span> = {<span class="ruby-identifier">:conditions</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>}}                
+866:               
+867:               <span class="ruby-keyword kw">end</span>
+868:               <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">find_options</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Hash</span>)
+869:                 <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;Find options does not evaluate to a Hash&quot;</span>
+870:               <span class="ruby-keyword kw">end</span>
+871:               <span class="ruby-identifier">instance</span> = <span class="ruby-identifier">model</span>.<span class="ruby-identifier">find</span>(<span class="ruby-identifier">:first</span>, <span class="ruby-identifier">find_options</span>)
 872:             <span class="ruby-keyword kw">end</span>
-873:             <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+873:             <span class="ruby-identifier">instance</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">accessor</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">instance</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">accessor</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>)
 874:           <span class="ruby-keyword kw">end</span>
-875:           <span class="ruby-keyword kw">false</span>
-876:         <span class="ruby-keyword kw">end</span>
+875:           
+876:           
+877:           <span class="ruby-identifier">flash_key</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:flash_key</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">:warning</span>
+878:           <span class="ruby-identifier">message</span> = <span class="ruby-identifier">options</span> [<span class="ruby-identifier">:message</span>] <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;Your request will not be processed &quot;</span> <span class="ruby-operator">+</span>
+879:             <span class="ruby-value str">&quot;because the resource you require is no longer available.&quot;</span>
+880:           
+881:           <span class="ruby-keyword kw">unless</span> (<span class="ruby-identifier">result</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Numeric</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-value str">&quot;&gt;&quot;</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>) <span class="ruby-operator">||</span>
+882:               (<span class="ruby-operator">!</span><span class="ruby-identifier">result</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Numeric</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">result</span>)
+883:             
+884:             <span class="ruby-identifier">flash</span>[<span class="ruby-identifier">flash_key</span>] = <span class="ruby-identifier">message</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">message</span>.<span class="ruby-identifier">blank?</span>
+885:             <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
+886:               <span class="ruby-identifier">instance_eval</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+887:             <span class="ruby-keyword kw">else</span>
+888:               <span class="ruby-identifier">template_to_use</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:template</span>] <span class="ruby-operator">||</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">controller_name</span>, <span class="ruby-identifier">action_name</span>)
+889:               <span class="ruby-identifier">template_to_use</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp re">/(_resource_unavailable)?$/</span>, <span class="ruby-value str">&quot;_resource_unavailable&quot;</span>)
+890:               <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+891:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> {
+892:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
+893:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
+894:                   <span class="ruby-keyword kw">else</span>
+895:                     <span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span><span class="ruby-comment cmt">#, :status =&gt; 409</span>
+896:                   <span class="ruby-keyword kw">end</span>
+897:                 }
+898:                 
+899:                 <span class="ruby-identifier">format</span>.<span class="ruby-identifier">js</span> {
+900:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">template_exists?</span>(<span class="ruby-identifier">template_to_use</span>)
+901:                     <span class="ruby-identifier">render</span> <span class="ruby-identifier">:file</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">template_to_use</span>,  <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>
+902:                   <span class="ruby-keyword kw">else</span>
+903:                     <span class="ruby-identifier">render</span>(<span class="ruby-identifier">:update</span>, <span class="ruby-identifier">:status</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">409</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">page</span><span class="ruby-operator">|</span>
+904:                       
+905:                       <span class="ruby-identifier">page</span>.<span class="ruby-identifier">redirect_to</span> <span class="ruby-identifier">:back</span>
+906:                       <span class="ruby-identifier">page</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-node">&quot;alert('#{escape_javascript message}')&quot;</span>
+907:                     <span class="ruby-keyword kw">end</span>
+908:                     
+909:                   <span class="ruby-keyword kw">end</span>
+910:                   <span class="ruby-identifier">flash</span>.<span class="ruby-identifier">discard</span>
+911:                 }
+912:               <span class="ruby-keyword kw">end</span>
+913:             <span class="ruby-keyword kw">end</span>
+914:             <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+915:           <span class="ruby-keyword kw">end</span>
+916:           <span class="ruby-keyword kw">false</span>
+917:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
