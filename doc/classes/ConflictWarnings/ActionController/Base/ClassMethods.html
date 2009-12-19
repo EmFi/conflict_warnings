@@ -92,8 +92,23 @@ href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt> use
 timestamps and resources respectively to identify problem requests.
 </p>
 <p>
+<tt><a
+href="ClassMethods.html#M000003">filter_stale_optimistic_locks</a></tt> is
+a wrapper for <a href="ClassMethods.html#M000001">filter_conflicts</a> that
+facilitates use of models that have optimistic locks enabled.
+</p>
+<p>
 In either case, conflict_warnings will make reasonable guesses when options
 are omitted.
+</p>
+<p>
+Unless options dictate otherwise these methods will select a model, and id
+and accessor to generate a comparison. Without options, the model is taken
+from the controller name, id is from the params[:id] field. The default
+accessor is used depends on the filter method, see the definitions of
+<tt><a href="ClassMethods.html#M000001">filter_conflicts</a></tt>,
+<tt>fitler_resources_unavailable</tt> and
+<tt>fitler_stale_optimistic_locks</tt> for default values.
 </p>
 <p>
 For requests accepting html, the default action in the event of a conflict
@@ -115,7 +130,9 @@ who&#8216;s status is not 302 Redirected.
 <h2>Common Options for filters</h2>
 <p>
 <tt><a href="ClassMethods.html#M000001">filter_conflicts</a> *args, options
-= {}, &amp;block</tt> <tt>filter_resources_unavilable *args, options = {},
+= {}, &amp;block</tt> <tt><a
+href="ClassMethods.html#M000003">filter_stale_optimistic_locks</a> options
+= {}, &amp; block</tt> <tt>filter_resources_unavilable *args, options = {},
 &amp;block</tt>
 </p>
 <p>
@@ -189,6 +206,10 @@ processed because the resource you require is no longer available.&quot;
 <tt>:warning</tt>
 
 </dd>
+<dt><tt>:lock</tt></dt><dd>If true this will enable pessimistic locking on the instance used to
+identify conflicts. Only locks if there are no problem with the request.
+
+</dd>
 <dt><tt>:except, :only</tt></dt><dd>Arguments to be passed to the underlying before_filter call
 
 </dd>
@@ -209,6 +230,7 @@ provided, the default action as described above is taken.
       <div class="name-list">
       <a href="#M000001">filter_conflicts</a>&nbsp;&nbsp;
       <a href="#M000002">filter_resources_unavailable</a>&nbsp;&nbsp;
+      <a href="#M000003">filter_stale_optimistic_locks</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -361,17 +383,17 @@ these requests will not be:
             onclick="toggleCode('M000001-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000001-source">
 <pre>
-     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 378</span>
-378:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_conflicts</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-379:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
-380:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterConflicts</span>)
-381:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
-382:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
-383:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>          
-384:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
-385:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_conflicts</span>(<span class="ruby-identifier">options</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-386:           <span class="ruby-keyword kw">end</span>
-387:         <span class="ruby-keyword kw">end</span>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 397</span>
+397:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_conflicts</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+398:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
+399:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterConflicts</span>)
+400:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
+401:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+402:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>          
+403:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
+404:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_conflicts</span>(<span class="ruby-identifier">options</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+405:           <span class="ruby-keyword kw">end</span>
+406:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
@@ -392,13 +414,6 @@ Filters requests by checking a record or model for availability See common
 options, to understand how <tt><a
 href="ClassMethods.html#M000002">filter_resources_unavailable</a></tt>
 selects a record or model and determins availability.
-</p>
-<p>
-Without any arguments, the model, id, and accessor are used to select the
-resource. Unless options dictate otherwise, the model, is taken from the
-controller name, id is from the params[:id] field, and accessor is the
-first field containing the name &quot;available&quot; on the instance of
-the model with the given id.
 </p>
 <p>
 If accessor returns 0, or a false value the request is interrupted. If a
@@ -465,17 +480,103 @@ post :action =&gt; :create, :event_id =&gt; 1
             onclick="toggleCode('M000002-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000002-source">
 <pre>
-     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 451</span>
-451:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_resources_unavailable</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-452:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
-453:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterResourcesUnavailable</span>)
-454:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
-455:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
-456:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
-457:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
-458:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_resources_unavailable</span>(<span class="ruby-identifier">options</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
-459:           <span class="ruby-keyword kw">end</span>
-460:         <span class="ruby-keyword kw">end</span>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 465</span>
+465:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_resources_unavailable</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+466:           <span class="ruby-identifier">options</span> = <span class="ruby-identifier">args</span>.<span class="ruby-identifier">extract_options!</span>
+467:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterResourcesUnavailable</span>)
+468:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_resource_conflicts</span>, <span class="ruby-identifier">options</span>)
+469:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+470:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+471:           <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span> <span class="ruby-identifier">options</span>
+472:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
+473:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_resources_unavailable</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">args</span>,<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+474:           <span class="ruby-keyword kw">end</span>
+475:         <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000003" class="method-detail">
+        <a name="M000003"></a>
+
+        <div class="method-heading">
+          <a href="#M000003" class="method-signature">
+          <span class="method-name">filter_stale_optimistic_locks</span><span class="method-args">(options = {}, &amp;block)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Filters requests by comparing a lock version embedded in the parameters
+hash against a record. See common options, to understand how
+<tt>catch_stale_optimistic_locks</tt> acquires selects a record. The
+following options are used to obtain the lock version for comparison from
+the record.
+</p>
+<p>
+Using lock versions to catch conflicts is a two step process.
+</p>
+<p>
+Step one: Embed a lock_version paramater in potentially dangerous links.
+This is easist done with the link_to helper by adding <tt>:lock_version
+=&gt; @record.lock_version</tt> to the url argument of link_to.
+</p>
+<p>
+Step two: Catch undesireable lock_versions using
+<tt>catch_stale_optimistic_locks</tt>. The options given are used to find a
+lock version to compare against the lock version of the referring page. If
+the lock version provided in the parameters is deteremined to greater than
+the lock version of the selected record the request is interrupted.
+</p>
+<p>
+The record used to generate the comparison is stored in an instance
+variable @#{model_name}. Where model name is the name of the model used to
+find the record. Making it available to the rest of your action and
+templates
+</p>
+<p>
+The block is optional and will be evaluated in place of the
+conflict_warnings default actions when a problem request is identified. It
+should contain a respond_to block.
+</p>
+<p>
+<tt>catch_stale_optimistic_locks</tt> accepts two additional options to the
+common options described above.
+</p>
+<dl>
+<dt><tt>:lock_version_key</tt></dt><dd>Parameter hash key containing the lock version of the model at the time the
+
+</dd>
+</dl>
+<pre>
+                          referring page was rendered. The value of &lt;tt&gt;params[options[:lock_version_key]&lt;/tt&gt;
+                          is compared against the locking_column of the record selected to identify conflicts.
+                          If there is no parameter hash key matching the value of &lt;tt&gt;options[:lock_version_key]&lt;/tt&gt;
+                          the requests is considered to be inconflict. Default value is &lt;tt&gt;:lock_version&lt;/tt&gt;
+</pre>
+<dl>
+<dt><tt>:locking_column</tt></dt><dd>Method sent to the selected record that returns the lock_version
+information used to identify problem requests. In
+catch_stale_optimistic_locks, the default is Model.locking_column, which
+defaults to &quot;lock_version&quot;.
+
+</dd>
+</dl>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000003-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000003-source">
+<pre>
+     <span class="ruby-comment cmt"># File lib/conflict_warnings.rb, line 516</span>
+516:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">filter_stale_optimistic_locks</span>(<span class="ruby-identifier">options</span> = {}, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+517:           <span class="ruby-identifier">options</span>.<span class="ruby-identifier">assert_valid_keys</span>(<span class="ruby-constant">CWValidKeysForFilterStaleOptimisticLocks</span>)
+518:           <span class="ruby-identifier">valid_options_for_conflict_warnings?</span>(<span class="ruby-identifier">:filter_stale_optimitistic_locks</span>, <span class="ruby-identifier">options</span>)
+519:           <span class="ruby-identifier">except</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:except</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:except</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+520:           <span class="ruby-identifier">only</span> = <span class="ruby-identifier">options</span>[<span class="ruby-identifier">:only</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">options</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">:only</span>) <span class="ruby-operator">:</span> <span class="ruby-keyword kw">nil</span>
+521:           <span class="ruby-identifier">before_filter</span> <span class="ruby-identifier">:except</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">except</span>, <span class="ruby-identifier">:only</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">only</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">controller</span><span class="ruby-operator">|</span>
+522:             <span class="ruby-identifier">controller</span>.<span class="ruby-identifier">catch_stale_optimistic_locks</span>(<span class="ruby-identifier">options</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+523:           <span class="ruby-keyword kw">end</span>
+524:         <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>

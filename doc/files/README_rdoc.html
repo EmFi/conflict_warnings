@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Thu Dec 17 05:55:43 -0500 2009</td>
+      <td>Fri Dec 18 19:00:08 -0500 2009</td>
     </tr>
     </table>
   </div>
@@ -73,9 +73,10 @@
 <p>
 conflict_warnings is an ActionController extension that provides methods of
 preventing data inconsistencies that could arise from multiple users
-interacting with the same resource at roughly the same time. Named after
-the <b>HTTP 409 Conflict</b> status, conflict_warnings determines if a
-database conflict is likely and intercepts potentailly dangerous requests.
+interacting with the same resource at roughly the same time. Essentially
+providing Optimistic Locking persisting across requests. Named after the
+<b>HTTP 409 Conflict</b> status, conflict_warnings determines if a database
+conflict is likely and intercepts potentailly dangerous requests.
 </p>
 <h1>Installation</h1>
 <p>
@@ -88,8 +89,10 @@ git://github.com/EmFi/conflict_warnings.git</tt>
 <h1>Usage</h1>
 <h2>filters</h2>
 <p>
-Add either <tt>filter_conflicts</tt> or <tt>filter_resource_conflicts</tt>
-to your controllers as if they were a before filter.
+Add either <tt>filter_conflicts</tt>,
+<tt>filter_stale_optimistic_locks</tt> or
+<tt>filter_resource_conflicts</tt> to your controllers as if they were a
+before filter.
 </p>
 <pre>
     class ExamplesController &lt; ApplicationController
@@ -100,6 +103,10 @@ to your controllers as if they were a before filter.
 or
 </p>
 <pre>
+    class LockExampleController &lt; ApplicationController
+      filter_stale_optimistic_locks
+    end
+
     class ExamplesController &lt; ApplicationController
       filter_resources_conflicts :only =&gt; :update
     end
@@ -107,7 +114,8 @@ or
 <h2>Controller Instance Methods</h2>
 <p>
 The underlying methods are also provided for use in your own filters, as
-<tt>catch_conflict</tt> and <tt>catch_resource_conflict</tt>.
+<tt>catch_conflict</tt>, <tt>catch_stale_optimistic_locks</tt> and
+<tt>catch_resource_conflict</tt>.
 </p>
 <pre>
     class LockingResourcesController &lt; ApplicationController
@@ -134,6 +142,11 @@ used, will be used to find the instance with an id of params[:id].
 passed in the link against the updated_at column of the instance. Helpers
 are provided for creating links with this timestamp. If the model was
 modified after the timestamp, the request interrupted.
+</p>
+<p>
+<tt>filter_stale_optimistic_locks</tt> and
+<tt>catch_stale_optimistic_locks</tt> compare a lock version passed in the
+link against the lock_version fo the the selected instance.
 </p>
 <p>
 <tt>filter_resources_unavialable</tt> and <tt>catch_conflicts</tt> will
@@ -179,11 +192,13 @@ This plugin comes with generated documentation for its provided methods and
 classes in the doc folder.
 </p>
 <p>
-In depth documentation of <tt>filter_conflicts</tt> and
+In depth documentation of <tt>filter_conflicts</tt>,
+<tt>filter_stale_optimistic_locks</tt> and
 <tt>filter_resources_unavailable</tt> can be found in
 ConflictWarnings::ActionController::ClassMethods#. While documentation of
-<tt>catch_conflicts</tt> and <tt>catch_resources_unavaialble</tt> can be
-found in ConflictWarnigns::ActionController::InstanceMethods#.
+<tt>catch_conflicts</tt>, <tt>catch_stale_optimistic_locks</tt> and
+<tt>catch_resources_unavaialble</tt> can be found in
+ConflictWarnigns::ActionController::InstanceMethods#.
 </p>
 <p>
 <tt>conflict_warnings</tt> provides view helpers that add parameters
@@ -198,11 +213,21 @@ href="../classes/ConflictWarnings/ActionView/Helpers/FormTagHelper.html">Conflic
 </p>
 <h1>Caveats</h1>
 <p>
-If <tt>catch_conflicts</tt>, <tt>catch_resource_conflict</tt>,
-<tt>filter_conflicts</tt> and <tt>filter_resource_conflicts</tt> not
-receive enough information to reach a decision it will usually assumes the
-action is harmful. Records that produce a nil value to compare the time the
-requesting page was rendered will be allowed to complete successfully.
+If <tt>catch_conflicts</tt>, <tt>catch_stale_optimistic_locks</tt>,
+<tt>catch_resource_conflict</tt>, <tt>filter_conflicts</tt>,
+<tt>filter_stale_optimistic_locks</tt> and
+<tt>filter_resource_conflicts</tt>, not receive enough information to reach
+a decision it will usually assumes the action is harmful. Records that
+produce a nil value for comparing a time or lock version against a
+counterpart value(provided in the paremters) will be allowed to complete
+successfully.
+</p>
+<p>
+At present forms are not handled well. With the default options, a
+users&#8217; form will be overwritten by the changes to the record that
+occured between page load and submit. You will have to provide a template
+to caputre the form from the params hash and figure out a way to display
+the merged data.
 </p>
 <h1>Things To Do:</h1>
 <pre>

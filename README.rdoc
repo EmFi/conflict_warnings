@@ -2,7 +2,8 @@
 
 conflict_warnings is an ActionController extension that provides methods of
 preventing data inconsistencies that could arise from multiple users interacting
-with the same resource at roughly the same time. Named after the <b>HTTP 409
+with the same resource at roughly the same time. Essentially providing
+Optimistic Locking persisting across requests. Named after the <b>HTTP 409
 Conflict</b> status, conflict_warnings determines if a database conflict is
 likely and intercepts potentailly dangerous requests.
 
@@ -16,8 +17,8 @@ From the root of your rails project run the following command:
 
 == filters
 
-Add either +filter_conflicts+ or +filter_resource_conflicts+ to your controllers
-as if they were a before filter.
+Add either +filter_conflicts+, +filter_stale_optimistic_locks+ or  +filter_resource_conflicts+
+to your controllers as if they were a before filter.
 
     class ExamplesController < ApplicationController
       filter_conflicts
@@ -25,13 +26,18 @@ as if they were a before filter.
 
 or
 
+    class LockExampleController < ApplicationController
+      filter_stale_optimistic_locks
+    end
+
     class ExamplesController < ApplicationController
       filter_resources_conflicts :only => :update
     end
 
+
 == Controller Instance Methods
 The underlying methods are also provided for use in your own filters, as
-+catch_conflict+ and +catch_resource_conflict+.
++catch_conflict+, +catch_stale_optimistic_locks+ and +catch_resource_conflict+.
 
     class LockingResourcesController < ApplicationController
       before_filter :login_required, :acquire_lock
@@ -53,6 +59,9 @@ will be used to find the instance with an id of params[:id].
 against the updated_at column of the instance. Helpers are provided for creating
 links with this timestamp. If the model was modified after the timestamp, the request
 interrupted.
+
++filter_stale_optimistic_locks+ and +catch_stale_optimistic_locks+ compare a lock
+version passed in the link against the lock_version fo the the selected instance.
 
 +filter_resources_unavialable+ and +catch_conflicts+ will check for an instance method
 that ends with +available+. If this method returns 0 or a false value, the request
@@ -86,9 +95,10 @@ to update timestamps in regions of a page that are not updated as by an interrup
 This plugin comes with generated documentation for its provided methods and classes
 in the doc folder.
 
-In depth documentation of +filter_conflicts+ and +filter_resources_unavailable+ can
+In depth documentation of +filter_conflicts+, +filter_stale_optimistic_locks+
+and +filter_resources_unavailable+ can
 be found in ConflictWarnings::ActionController::ClassMethods#. While documentation of
-+catch_conflicts+ and +catch_resources_unavaialble+ can be found in
++catch_conflicts+, +catch_stale_optimistic_locks+ and +catch_resources_unavaialble+ can be found in
 ConflictWarnigns::ActionController::InstanceMethods#.
 
 +conflict_warnings+ provides view helpers that add parameters
@@ -101,11 +111,17 @@ ConflictWarnigns::ActionController::InstanceMethods#.
 
 = Caveats
 
-If +catch_conflicts+, +catch_resource_conflict+, +filter_conflicts+ and
-+filter_resource_conflicts+ not receive enough information to
+If +catch_conflicts+, +catch_stale_optimistic_locks+, +catch_resource_conflict+,
++filter_conflicts+, +filter_stale_optimistic_locks+ and
++filter_resource_conflicts+,  not receive enough information to
 reach a decision it will usually assumes the action is harmful. Records that produce
-a nil value to compare the time the requesting page was rendered will be allowed
-to complete successfully.
+a nil value for comparing a time or lock version against a counterpart value(provided
+in the paremters) will be allowed to complete successfully.
+
+At present forms are not handled well. With the default options, a users' 
+form will be overwritten by the changes to the record that occured between 
+page load and submit. You will have to provide a template to caputre the 
+form from the params hash and figure out a way to display the merged data.
 
 
 

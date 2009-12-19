@@ -170,20 +170,25 @@ module ConflictWarnings #:nodoc:
       
       CWCommonValidKeys = [
         :message, :flash_key, :model, :id,
-        :accessor, :params_id_key, :find_options, :template ]
+        :accessor, :params_id_key, :find_options, :template, :lock ]
         
       CWInstanceSelectionKeys =[:id, :params_id_key, :find_options, :class_method]
         
       CWModelSelectionKeys = [:model]
         
       CWFilterOptions = [:only, :except]
-        
+
+      
+
       CWSimulationKeys = [:simulate_conflict_on_requests_before,
         :simulate_conflict_on_requests_after]
-        
+      CWValidKeysForCatchStaleOptimisticLocks = CWCommonValidKeys +
+        [:lock_version_key, :use_locking_column, :locking_column]
+      CWValidKeysForFilterStaleOptimisticLocks = CWValidKeysForCatchStaleOptimisticLocks +
+        CWFilterOptions
       CWValidKeysForCatchConflicts = [
         :simulate_conflict_on_requests_before, :simulate_conflict_on_requests_after,
-        :timestamp_key ] + CWCommonValidKeys
+        :timestamp_key, :use_locking_column] + CWCommonValidKeys
       CWValidKeysForFilterConflicts= CWFilterOptions +
         CWValidKeysForCatchConflicts
       CWValidKeysForCatchResourcesUnavailable = [:class_method] + CWCommonValidKeys
@@ -203,8 +208,18 @@ module ConflictWarnings #:nodoc:
       # +filter_conflicts+ and +filter_resources_unavailable+ use timestamps
       # and resources respectively to identify problem requests.
       #
+      # +filter_stale_optimistic_locks+ is a wrapper for filter_conflicts that
+      # facilitates use of models that have optimistic locks enabled.
+      #
       # In either case, conflict_warnings will make reasonable guesses when options are
       # omitted.
+      #
+      # Unless options dictate otherwise these methods will select a model, and id and accessor
+      # to generate a comparison. Without options, the model is taken from
+      # the controller name, id is from the params[:id] field. The default accessor is used depends
+      # on the filter method, see the definitions of +filter_conflicts+,
+      # +fitler_resources_unavailable+ and +fitler_stale_optimistic_locks+
+      # for default values.
       #
       # For requests accepting html, the default action in the event of a conflict
       # is to <tt>redirect_to :back</tt>, reloading the referring page, and adding
@@ -222,6 +237,7 @@ module ConflictWarnings #:nodoc:
       # == Common Options for filters
       #
       # <tt>filter_conflicts *args, options = {}, &block</tt>
+      # <tt>filter_stale_optimistic_locks options = {}, & block</tt>
       # <tt>filter_resources_unavilable *args, options = {}, &block</tt>
       #
       # *args are passed to the accessor. The block is optional and will be evaluated in place
@@ -283,6 +299,9 @@ module ConflictWarnings #:nodoc:
       #
       # [<tt>:flash_key</tt>] The flash hash key to store the message in. Default value
       #                       is <tt>:warning</tt>
+      #
+      # [<tt>:lock</tt>] If true this will enable pessimistic locking on the instance used to
+      #                  identify conflicts. Only locks if there are no problem with the request.
       #
       # [<tt>:except, :only</tt>] Arguments to be passed to the underlying before_filter call
       #
@@ -389,12 +408,7 @@ module ConflictWarnings #:nodoc:
         # Filters requests by checking a record or model for availability
         # See common options, to understand how +filter_resources_unavailable+
         # selects a record or model and determins availability.
-        #
-        # Without any arguments, the model, id, and accessor are used to
-        # select the resource. Unless options dictate otherwise, the model, is taken from
-        # the controller name, id is from the params[:id] field, and accessor is the first
-        # field containing the name "available" on the instance of the model with the
-        # given id.
+        #        
         #
         # If accessor returns 0, or a false value the request is interrupted.
         # If a record cannot be found with the given options, then the request will
@@ -454,8 +468,58 @@ module ConflictWarnings #:nodoc:
           valid_options_for_conflict_warnings?(:filter_resource_conflicts, options)
           except = options[:except] ? options.delete(:except) : nil
           only = options[:only] ? options.delete(:only) : nil
+          args.push options
           before_filter :except => except, :only => only do |controller|
-            controller.catch_resources_unavailable(options,&block)
+            controller.catch_resources_unavailable(*args,&block)
+          end
+        end
+
+
+        # Filters requests by comparing a lock version embedded in the parameters hash
+        # against a record. See common options, to understand how +catch_stale_optimistic_locks+
+        # acquires selects a record. The following options are used to obtain the lock version
+        # for comparison from the record.
+        #
+        # Using lock versions to catch conflicts is a two step process.
+        #
+        # Step one: Embed a lock_version paramater in potentially dangerous links.
+        # This is easist done with the link_to helper by adding <tt>:lock_version => @record.lock_version</tt>
+        # to the url argument of link_to.
+        #       
+        # Step two: Catch undesireable lock_versions using +catch_stale_optimistic_locks+.
+        # The options given are used to find a lock version to compare against the lock version of
+        # the referring page. If the lock version provided in the parameters is deteremined to greater than
+        # the lock version of the selected record the request is interrupted.
+        #
+        # The record used to generate the comparison is stored in an instance variable
+        # @#{model_name}. Where model name is the name of the model used to find the
+        # record. Making it available to the rest of your action and templates
+        #
+        # The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
+        # +catch_stale_optimistic_locks+ accepts two additional options to the common options described above.
+        #
+        # [<tt>:lock_version_key</tt>] Parameter hash key containing the lock version of the model at the time the
+        #                           referring page was rendered. The value of <tt>params[options[:lock_version_key]</tt>
+        #                           is compared against the locking_column of the record selected to identify conflicts.
+        #                           If there is no parameter hash key matching the value of <tt>options[:lock_version_key]</tt>
+        #                           the requests is considered to be inconflict. Default value is <tt>:lock_version</tt>
+        #
+        # [<tt>:locking_column</tt>] Method sent to the selected record that returns the lock_version information
+        #                            used to identify problem requests. In catch_stale_optimistic_locks,
+        #                            the default is Model.locking_column, which defaults to "lock_version".
+        #
+
+
+        def filter_stale_optimistic_locks(options = {}, &block)
+          options.assert_valid_keys(CWValidKeysForFilterStaleOptimisticLocks)
+          valid_options_for_conflict_warnings?(:filter_stale_optimitistic_locks, options)
+          except = options[:except] ? options.delete(:except) : nil
+          only = options[:only] ? options.delete(:only) : nil
+          before_filter :except => except, :only => only do |controller|
+            controller.catch_stale_optimistic_locks(options, &block)
           end
         end
         
@@ -508,12 +572,19 @@ module ConflictWarnings #:nodoc:
       # was not found in a HTTP request. Some browsers will not follow a redirection
       # who's status is not 302 Redirected.
       #
-      # Both of these methods return true if a request was interrupted, otherwise
+      # All of these methods return true if a request was interrupted, otherwise
       # they return false.
+      #
+      # The record used to generate the comparison is stored in an instance variable
+      # @#{model_name}. Where model name is the name of the model used to find the
+      # record. Making it available to the rest of your action and templates. Updating
+      # this instance variable allows you to maintain optimistic locking behaviour
+      # throughout your action.
       #
       # == Common Options for catch_*
       #
       # <tt>catch_conflicts *args, options = {}, &block</tt>
+      # <tt>catch_stale_optimistic_locks options = {}, &block</tt>
       # <tt>catch_resources_unavilable *args, options = {}, &block</tt>
       #
       # *args are passed to the accessor. The block is optional and will be evaluated in place
@@ -561,9 +632,7 @@ module ConflictWarnings #:nodoc:
       #                       "#{controller_name}/#{action_name}_resource_unavailable".
       #                       When a conflict is identified on search for a html.erb, .rhtml,
       #                       or .rjs file depending on the request. If one isn't found the default action
-      #                       is taken. The record used to generate the comparison is avaialble to template
-      #                       as @#{model_name}. Where model name is the name of the model used to find the
-      #                       record. 
+      #                       is taken. 
       #
       #
       # [<tt>:message</tt>] Message added to the flash hash. The catch_conflicts default value
@@ -574,6 +643,9 @@ module ConflictWarnings #:nodoc:
       #
       # [<tt>:flash_key</tt>] The flash hash key to store the message in. Default value
       #                       is <tt>:warning</tt>
+      #
+      # [<tt>:lock</tt>] If true this will enable pessimistic locking on the instance used to
+      #                  identify conflicts. Only locks if there are no problem with the request.
       #
       # [<tt>&block</tt>] This block is evaulated when a problem request is identified
       #                   If no block is provided, the default action as described above is taken.
@@ -600,6 +672,10 @@ module ConflictWarnings #:nodoc:
         # which the referrant was rendered against the updated_at field on the record to
         # be changed. If the timestamp provided in the parameters is deteremined to be invalid
         # the request is interrupted.
+        #
+        #  The record used to generate the comparison is stored in an instance variable
+        # @#{model_name}. Where model name is the name of the model used to find the
+        # record. Making it available to the rest of your action and templates
         #
         # *args are passed to the accessor. The block is optional and will be evaluated in place
         # of the conflict_warnings default actions when a problem request is identified.
@@ -686,6 +762,12 @@ module ConflictWarnings #:nodoc:
           model = options[:model] || self.controller_name.singularize
           instance = model if model.is_a?(ActiveRecord::Base)
           model = get_model model
+          default_accessor = case options[:use_locking_column] && !model.nil? && model.locking_enabled?
+          when true
+            model.locking_column
+          else 
+            model.column_names.grep(/(updated_(at|on))/).first
+          end
           if options[:simulate_conflict_on_requests_before].nil? &&
               options[:simulate_conflict_on_requests_after].nil? &&
               CWInstanceSelectionKeys.all?{|k| options[k].nil?} &&
@@ -706,7 +788,7 @@ module ConflictWarnings #:nodoc:
           elsif options[:simulate_conflict_on_requests_after]
             nil
           else
-            accessor = options[:accessor] || model.column_names.grep(/(updated_(at|on))/).first            
+            accessor = options[:accessor] || default_accessor
             unless instance || model.nil?
               find_options = {}
               id = options[:id] || params[options[:params_id_key]] || 
@@ -723,15 +805,18 @@ module ConflictWarnings #:nodoc:
             end
             instance && accessor && instance.send(accessor, *args)
           end
+          redirect_requests_before &&= redirect_requests_before.to_i
           redirect_requests_after = options[:simulate_conflict_on_requests_after]
+          redirect_requests_after &&= redirect_requests_after.to_i
           timestamp_key = options[:timestamp_key] || :page_rendered_at
           time_stamp = params[timestamp_key]          
           flash_key = options[:flash_key] || :warning
           message = options [:message] || "Your request will not be processed " +
             "because the data you were viewing is out of date. The page has " +
             "been refreshed. Please try again."
-          rendered_at = Time.at(time_stamp.to_i) if time_stamp
-          
+          rendered_at = time_stamp.to_i if time_stamp
+
+          instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
           if rendered_at.nil? || rendered_at &&
               #case where both are provided
             (
@@ -748,8 +833,7 @@ module ConflictWarnings #:nodoc:
                     rendered_at > redirect_requests_after)
               )
             )
-            flash[flash_key] = message unless message.blank?
-            instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
+            flash[flash_key] = message unless message.blank?            
             if block_given?
               instance_eval(&block)
             else
@@ -780,10 +864,55 @@ module ConflictWarnings #:nodoc:
               end
             end
             return true
+          else instance.lock! if options[:lock]
           end
           false
         end
 
+
+        # Catches problem requests by comparing a lock version embedded in the parameters hash
+        # against a record. See common options, to understand how +catch_stale_optimistic_locks+
+        # acquires selects a record. The following options are used to obtain the lock version
+        # for comparison from the record.
+        #
+        # Using lock versions to catch conflicts is a two step process.
+        #
+        # Step one: Embed a lock_version paramater in potentially dangerous links.
+        # This is easist done with the link_to helper by adding <tt>:lock_version => @record.lock_version</tt>
+        # to the url argument of link_to.
+        #
+        #
+        # Step two: Catch undesireable lock_versions using +catch_stale_optimistic_locks+.
+        # The options given are used to find a lock version to compare against the lock version of
+        # the referring page. If the lock version provided in the parameters is deteremined to greater than
+        # the lock version of the selected record the request is interrupted.
+        #
+        # The record used to generate the comparison is stored in an instance variable
+        # @#{model_name}. Where model name is the name of the model used to find the
+        # record. Making it available to the rest of your action and templates
+        #
+        # The block is optional and will be evaluated in place
+        # of the conflict_warnings default actions when a problem request is identified.
+        # It should contain a respond_to block.
+        #
+        # +catch_stale_optimistic_locks+ accepts two additional options to the common options described above.
+        #
+        # [<tt>:lock_version_key</tt>] Parameter hash key containing the lock version of the model at the time the
+        #                           referring page was rendered. The value of <tt>params[options[:lock_version_key]</tt>
+        #                           is compared against the locking_column of the record selected to identify conflicts.
+        #                           If there is no parameter hash key matching the value of <tt>options[:lock_version_key]</tt>
+        #                           the requests is considered to be inconflict. Default value is <tt>:lock_version</tt>
+        #
+        # [<tt>:locking_column</tt>] Method sent to the selected record that returns the lock_version information
+        #                            used to identify problem requests. In catch_stale_optimistic_locks,
+        #                            the default is Model.locking_column, which defaults to "lock_version".
+        #
+        
+
+        def catch_stale_optimistic_locks(options,&block)
+          options.assert_valid_keys(CWValidKeysForCatchStaleOptimisticLocks)
+          catch_conflicts(translate_options(options),&block)
+        end
 
         # catches requests by checking a record or model for availability
         # See common options, to understand how +catch_resources_unavailable+
@@ -804,6 +933,10 @@ module ConflictWarnings #:nodoc:
         # The request is interrupted if the accessor returning false, or an numeric
         # value less than or equal to 0.
         #
+        # The record used to generate the comparison is stored in an instance variable
+        # @#{model_name}. Where model name is the name of the model used to find the
+        # record. Making it available to the rest of your action and templates
+        # 
         # *args are passed to the accessor. The block is optional and will be evaluated in place
         # of the conflict_warnings default actions when a problem request is identified.
         # It should contain a respond_to block.
@@ -883,10 +1016,9 @@ module ConflictWarnings #:nodoc:
           flash_key = options[:flash_key] || :warning
           message = options [:message] || "Your request will not be processed " +
             "because the resource you require is no longer available."
-          
+          instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
           unless (result.is_a?(Numeric) && result.respond_to?(">") && result > 0) ||
-              (!result.is_a?(Numeric) && result)
-            instance_variable_set("@#{model.to_s.underscore}".to_sym, instance)
+              (!result.is_a?(Numeric) && result)            
             flash[flash_key] = message unless message.blank?
             if block_given?
               instance_eval(&block)
@@ -918,6 +1050,7 @@ module ConflictWarnings #:nodoc:
               end
             end
             return true
+          else instance.lock! if options[:lock]
           end
           false
         end
@@ -944,6 +1077,12 @@ module ConflictWarnings #:nodoc:
             model = Kernel.const_get(model)
           end
           model
+        end
+
+        def translate_options options
+          options[:timestamp_key] = options.delete(:lock_version_key) || :lock_version
+          options[:use_locking_column] = true
+          options[:accessor] = options.delete(:locking_column)
         end
       end #InstanceMethods
       
