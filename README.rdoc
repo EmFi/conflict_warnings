@@ -127,6 +127,7 @@ form from the params hash and figure out a way to display the merged data.
 
 = Things To Do:
  * Handle additional formats beyond html and js
+ * Write form builder to allow for automatic side by side comparison of conflicting form data.
 
 
 Copyright (c) 2009 Emery Finkelstein, released under the MIT license
