@@ -529,12 +529,12 @@ module ConflictWarnings #:nodoc:
           simulation_keys_provided = CWSimulationKeys.select{|k|options.keys.include?(k)}
           instance_keys_provided = CWInstanceSelectionKeys.select{|k|options.keys.include?(k)}
           model_keys_provided = CWModelSelectionKeys.select{|k|options.keys.include?(k)}          
-          if simulation_keys_provided.count == 1 &&
-              (instance_keys_provided.count > 0 || model_keys_provided.count > 0)
+          if simulation_keys_provided.size == 1 &&
+              (instance_keys_provided.size > 0 || model_keys_provided.size > 0)
             raise ArgumentError, "#{method}: Ambiguous options provided. "+
               "#{CWSimulationKeys.join(" or ")} cannot be used with any of "+
               "#{(CWInstanceSelectionKeys + CWModelSelectionKeys).join(',')}"
-          elsif instance_keys_provided.count + (options[:model].is_a?(ActiveRecord::Base) ? 1 : 0)   > 1
+          elsif instance_keys_provided.size + (options[:model].is_a?(ActiveRecord::Base) ? 1 : 0)   > 1
             raise ArgumentError, "#{method}: Ambiguous options provided." +
               "Only one of #{CWInstanceSelectionKeys.join(",")} may be used."
           elsif options[:find_options] && !options[:find_options].is_a?(Proc)
